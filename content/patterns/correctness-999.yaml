@@ -1,0 +1,14 @@
+id: wrong-id-xyz
+title: Invalid pattern for CI rejection probe (dogfood only)
+category: correctness
+severity: minor
+source_sprint: kb-phase1-dogfood
+source_group: group-002
+discovered_at: "2026-04-19T04:30:00+09:00"
+frequency: 1
+last_seen: kb-phase1-dogfood
+description: Deliberately malformed — filename says correctness-999 but id mismatches. Expected to be blocked by validate:content.
+detection: Filename-id-match validator catches it.
+prevention: Use zzem-kb:write-pattern which derives filename from id automatically.
+contract_clause: Content files must match schema. CI enforces. This file should never reach main.
+schema_version: 1
