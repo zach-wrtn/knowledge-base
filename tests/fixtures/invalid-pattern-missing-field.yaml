@@ -1,0 +1,6 @@
+id: "correctness-002"
+title: "잘못된 예시"
+category: "correctness"
+severity: "critical"
+# missing source_sprint, discovered_at, etc.
+schema_version: 1

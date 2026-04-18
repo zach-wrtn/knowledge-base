@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zach-wrtn.github.io/knowledge-base/schemas/pattern.schema.json",
+  "title": "Pattern",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id", "title", "category", "severity", "source_sprint",
+    "discovered_at", "frequency", "last_seen",
+    "description", "detection", "prevention", "contract_clause",
+    "schema_version"
+  ],
+  "properties": {
+    "id":              { "type": "string", "pattern": "^(correctness|completeness|integration|edge_case|code_quality|design_proto|design_spec)-[0-9]{3}$" },
+    "title":           { "type": "string", "maxLength": 120 },
+    "category":        { "enum": ["correctness","completeness","integration","edge_case","code_quality","design_proto","design_spec"] },
+    "severity":        { "enum": ["critical","major","minor"] },
+    "source_sprint":   { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "source_group":    { "type": "string", "pattern": "^group-[0-9]+$" },
+    "discovered_at":   { "type": "string", "format": "date-time" },
+    "frequency":       { "type": "integer", "minimum": 1 },
+    "last_seen":       { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "description":     { "type": "string", "minLength": 10 },
+    "detection":       { "type": "string", "minLength": 10 },
+    "prevention":      { "type": "string", "minLength": 10 },
+    "contract_clause": { "type": "string", "minLength": 10 },
+    "example": {
+      "type": "object",
+      "required": ["bad","good"],
+      "properties": { "bad": {"type":"string"}, "good": {"type":"string"} }
+    },
+    "schema_version":  { "const": 1 }
+  }
+}

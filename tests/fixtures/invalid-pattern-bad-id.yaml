@@ -1,0 +1,14 @@
+id: "bogus-001"
+title: "잘못된 id prefix"
+category: "correctness"
+severity: "critical"
+source_sprint: "test"
+source_group: "group-001"
+discovered_at: "2026-04-06T00:00:00+09:00"
+frequency: 1
+last_seen: "test"
+description: "id의 카테고리 prefix가 필드의 category와 불일치."
+detection: "validate가 fail해야 함."
+prevention: "id 정규식이 카테고리를 포함."
+contract_clause: "id pattern 일치."
+schema_version: 1
