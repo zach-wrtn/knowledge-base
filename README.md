@@ -50,4 +50,4 @@ npm run validate   # run all validators locally
 
 ## License
 
-Private — zach-wrtn internal.
+Public — zach-wrtn team knowledge base.
