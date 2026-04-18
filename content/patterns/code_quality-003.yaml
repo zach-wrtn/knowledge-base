@@ -1,0 +1,43 @@
+id: code_quality-003
+title: "AJV compile() inside loop triggers duplicate $id registration error"
+category: code_quality
+severity: major
+source_sprint: kb-phase1-dogfood
+source_group: group-001
+discovered_at: "2026-04-19T04:00:00+09:00"
+frequency: 1
+last_seen: kb-phase1-dogfood
+description: |
+  JSON Schema 검증 루틴에서 `const validate = ajv.compile(schema)`를 루프 안에서 호출하면,
+  두 번째 반복부터 AJV가 `schema with key or id "..." already exists` 에러를 던진다.
+  AJV 인스턴스가 `$id`를 기준으로 컴파일 결과를 캐싱하기 때문. KB Phase 1 마이그레이션 중
+  fixture runner (`scripts/validate-fixtures.mjs`)에서 같은 스키마로 여러 fixture를 검증하려다 발견됨.
+detection: |
+  - AJV 기반 validator가 2회차 입력부터 "schema already exists" 에러로 터진다.
+  - 스키마 파일에 `$id` 필드가 있고, 동일 스키마를 반복 compile하는 코드 경로가 있다.
+prevention: |
+  스키마 이름을 키로 사용하는 캐시 맵(`const validators = {}`)을 만들고
+  `getValidator(name)` 헬퍼에서 `if (!validators[name]) validators[name] = ajv.compile(schema)`
+  패턴으로 한 번만 compile한다. 또는 `ajv.getSchema($id)`로 기존 컴파일 결과를 재사용한다.
+contract_clause: |
+  AJV `compile()`은 `$id`를 기준으로 중복 등록을 거부한다. 동일 스키마를 여러 번 검증해야 할 때는
+  validator를 캐싱하거나 `ajv.getSchema($id)`로 재사용하라. 루프 안에서 무조건 `compile()`하지 말 것.
+example:
+  bad: |
+    for (const c of cases) {
+      const schema = loadSchema(c.schema);
+      const validate = ajv.compile(schema);  // 2회차부터 throw
+      validate(c.data);
+    }
+  good: |
+    const validators = {};
+    function getValidator(name) {
+      if (!validators[name]) {
+        validators[name] = ajv.compile(loadSchema(name));
+      }
+      return validators[name];
+    }
+    for (const c of cases) {
+      getValidator(c.schema)(c.data);
+    }
+schema_version: 1
