@@ -1,0 +1,27 @@
+name: guard-sensitive-paths
+on:
+  push:
+    branches: [main]
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 2 }
+      - name: Fail on direct push to sensitive paths
+        run: |
+          # On the first commit of a branch, HEAD^ doesn't exist; skip.
+          if ! git rev-parse HEAD^ >/dev/null 2>&1; then
+            echo "First commit; nothing to diff. Skipping."
+            exit 0
+          fi
+          CHANGED=$(git diff --name-only HEAD^ HEAD)
+          echo "Changed files:"
+          echo "$CHANGED"
+          if echo "$CHANGED" | grep -E '^(schemas|skills|scripts|\.github)/' >/dev/null; then
+            echo ""
+            echo "::error::Direct push to protected paths detected. Rulesets may be misconfigured."
+            exit 1
+          fi
+          echo "All changes in content/ — OK"
