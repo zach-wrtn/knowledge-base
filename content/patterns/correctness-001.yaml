@@ -1,0 +1,40 @@
+id: correctness-001
+title: 커서 페이지네이션 DTO 이중 래핑
+category: correctness
+severity: critical
+source_sprint: ugc-profile-nav-001
+source_group: group-001
+discovered_at: '2026-04-06T00:00:00+09:00'
+frequency: 1
+last_seen: ugc-profile-nav-001
+description: |
+  Controller에서 Service가 반환한 CursorResponseDto를 다시 CursorResponseDto로 래핑하면
+  nextCursor가 중첩 구조에 묻혀 항상 null로 반환된다.
+  클라이언트는 다음 페이지가 없다고 판단하여 무한 스크롤이 동작하지 않는다.
+detection: |
+  - Controller 메서드에서 CursorResponseDto를 생성하는 코드가 있는지 확인
+  - Service가 이미 CursorResponseDto를 반환하는데 Controller에서 재래핑하는지 검사
+  - API 응답에서 nextCursor가 항상 null인지 테스트
+prevention: |
+  - Service 레이어에서 CursorResponseDto를 완성하여 반환
+  - Controller는 Service 반환값을 그대로 전달 (재래핑 금지)
+  - API 통합 테스트에서 nextCursor 값 검증 필수
+contract_clause: |
+  페이지네이션 API는 Controller에서 DTO를 재래핑하지 않는다.
+  Service가 반환한 CursorResponseDto를 그대로 사용하며,
+  통합 테스트에서 nextCursor 존재를 검증한다.
+example:
+  bad: |
+    // Controller
+    async getList(@Query() query: CursorQueryDto) {
+      const result = await this.service.getList(query);
+      return new CursorResponseDto(result.items, result.nextCursor);
+      // result가 이미 CursorResponseDto인데 또 래핑 → nextCursor 유실
+    }
+  good: |
+    // Controller
+    async getList(@Query() query: CursorQueryDto) {
+      return this.service.getList(query);
+      // Service가 CursorResponseDto를 완성하여 반환, Controller는 패스스루
+    }
+schema_version: 1

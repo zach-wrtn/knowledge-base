@@ -1,0 +1,29 @@
+id: edge_case-001
+title: 2-step atomic sequence ($inc → insert) counter gap on insert failure
+category: edge_case
+severity: major
+source_sprint: ai-webtoon
+source_group: group-002
+discovered_at: '2026-04-15T00:00:00+09:00'
+last_seen: ai-webtoon
+frequency: 1
+description: |
+  단조 증가 카운터 $inc와 row insert가 분리된 2-step 시퀀스에서 insert 실패 시
+  counter는 이미 advanced 된 상태로 남는다 → episodeNumber/sequenceNumber 갭 발생.
+  unique 복합 인덱스 backstop은 중복을 방어하지만 갭은 방어하지 못한다.
+  실제 사례: ai-webtoon appendEpisode — findOneAndUpdate $inc lastEpisodeNumber, 이후
+  episode row insert. insert가 duplicate generationId 등으로 실패하면 series의
+  lastEpisodeNumber는 advanced, 다음 append는 갭을 건너뛰는 번호로 할당.
+detection: |
+  - `$inc` 이후 별도 write operation이 이어지는 도메인 service 시퀀스 검사
+  - Insert try/catch 내부에 compensating $dec가 있는지 확인
+  - Integration test: insert 강제 실패 시 counter state 검증
+prevention: |
+  - 2-step 시퀀스 insert 부분에 try/catch + compensating $dec
+  - 혹은 spec / Contract에 "episodeNumber는 label, gap 허용" 명시적 선언
+  - 완전 원자성이 필요하면 transaction 또는 upsert-style 단일 write로 재설계
+contract_clause: |
+  counter $inc 이후 별도 write가 이어지는 2-step 시퀀스는, (a) insert 실패 시 compensating
+  $dec을 구현하거나 (b) Contract/schema 주석에 'gap 허용' 을 명시해야 한다. 암묵적
+  방치 금지.
+schema_version: 1

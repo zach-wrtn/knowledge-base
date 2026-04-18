@@ -1,0 +1,28 @@
+id: integration-002
+title: Cross-path cleanup/rollback 누락 (legacy vs new workflow)
+category: integration
+severity: major
+source_sprint: free-tab-diversification
+source_group: group-002
+discovered_at: '2026-04-14T00:00:00+09:00'
+frequency: 1
+last_seen: free-tab-diversification
+description: |
+  생성/쓰기 파이프라인에 복수 진입 경로(legacy vs new workflow, sync vs async)가
+  있을 때 rollback/cleanup 로직이 한쪽에만 구현되고 다른 경로에서 누락되어,
+  실패 시 데이터가 inconsistent 상태로 남는다.
+  실제 사례: free-tab-diversification be-004에서 새 workflow `handleError`에만
+  UserFreeQuota cleanup이 추가되고 legacy `setContentError` 경로에서 누락됨 → BR-2 위반.
+detection: |
+  - 신규 cleanup 로직이 추가되면 `grep`으로 해당 상태 변경 함수의 모든 호출 경로 수집
+  - Legacy callback/handler/error path 전부 동일 cleanup 호출하는지 검증
+  - Integration 테스트: legacy 경로 실패 시뮬레이션 → 동일 cleanup 실행 검증
+prevention: |
+  - cleanup/rollback 로직을 domain service private helper로 분리해 일원화
+  - 모든 진입점에서 공통 helper 호출 (rollbackXyzByContentId 등)
+  - 신규 경로 추가 시 기존 경로 전수 검사 의무
+contract_clause: |
+  생성 파이프라인에 복수 경로(legacy/new workflow)가 존재하면, 실패 처리
+  (rollback/cleanup) 로직을 양쪽 모두에 구현하거나 공통 helper로 일원화해야 한다.
+  신규 cleanup 추가 시 기존 callback 사이트 전수 검증.
+schema_version: 1

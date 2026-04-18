@@ -1,0 +1,48 @@
+id: integration-001
+title: BE/FE 간 응답 필드명 불일치
+category: integration
+severity: critical
+source_sprint: ugc-profile-nav-001
+source_group: group-001
+discovered_at: '2026-04-06T00:00:00+09:00'
+frequency: 1
+last_seen: ugc-profile-nav-001
+description: |
+  Backend API가 "list" 필드명으로 배열을 반환하는데
+  Frontend 모델/타입에서는 "items"로 기대하여 데이터가 바인딩되지 않는다.
+  API contract 문서와 실제 구현 간 필드명 동기화가 누락된 경우 발생한다.
+detection: |
+  - BE DTO의 배열 필드명과 FE 타입/인터페이스의 필드명을 대조
+  - API contract (Swagger/OpenAPI) 문서와 실제 DTO 필드명 비교
+  - FE에서 API 응답 파싱 후 undefined 필드가 있는지 런타임 검증
+prevention: |
+  - API contract에 필드명을 명시하고, BE DTO와 FE 타입 모두 동일한 이름 사용
+  - 공유 타입 정의 (shared types) 또는 OpenAPI codegen 활용
+  - BE/FE 통합 테스트에서 필드명 일치 검증
+contract_clause: |
+  API contract의 필드명은 BE DTO와 FE model에서 동일하게 사용한다.
+  배열 응답 필드명은 contract에 명시하고 양쪽에서 일치 여부를 검증한다.
+example:
+  bad: |
+    // Backend DTO
+    class MemeListResponseDto {
+      @ApiProperty()
+      list: MemeDto[];  // "list"로 반환
+    }
+
+    // Frontend type
+    interface MemeListResponse {
+      items: Meme[];  // "items"로 기대 → undefined
+    }
+  good: |
+    // Backend DTO
+    class MemeListResponseDto {
+      @ApiProperty()
+      items: MemeDto[];  // contract에 명시된 "items" 사용
+    }
+
+    // Frontend type
+    interface MemeListResponse {
+      items: Meme[];  // 동일한 "items" 사용
+    }
+schema_version: 1

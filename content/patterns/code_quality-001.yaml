@@ -1,0 +1,53 @@
+id: code_quality-001
+title: Clean Architecture 위반 (domain에서 react-query import)
+category: code_quality
+severity: major
+source_sprint: ugc-profile-nav-001
+source_group: group-001
+discovered_at: '2026-04-06T00:00:00+09:00'
+frequency: 1
+last_seen: ugc-profile-nav-001
+description: |
+  Domain 레이어에 react-query (useQuery, useMutation) import가 존재한다.
+  Domain은 프레임워크 독립적이어야 하며, react-query는 presentation 레이어에 속한다.
+  이 위반은 레이어 간 의존성 역전을 일으켜 테스트/재사용성을 저해한다.
+detection: |
+  - domain/ 디렉토리 내에서 react-query, @tanstack/react-query import 검색
+  - domain/ 디렉토리 내에서 useQuery, useMutation, useInfiniteQuery 사용 검색
+  - ESLint boundaries 플러그인으로 레이어 간 import 규칙 위반 감지
+prevention: |
+  - useQuery/useMutation은 presentation/hooks/ 에만 배치
+  - domain 레이어는 순수 TypeScript 타입/인터페이스/유틸리티만 포함
+  - ESLint boundaries 플러그인으로 레이어 간 import 제약 설정
+contract_clause: |
+  Domain 레이어는 React/react-query 등 프레임워크 의존성을 import하지 않는다.
+  useQuery/useMutation 훅은 presentation/hooks/ 디렉토리에만 위치한다.
+example:
+  bad: |
+    // domain/usecases/useGetUserProfile.ts
+    import { useQuery } from '@tanstack/react-query';
+
+    export const useGetUserProfile = (userId: string) => {
+      return useQuery(['userProfile', userId], () => fetchUserProfile(userId));
+    };
+  good: >
+    // domain/repositories/UserProfileRepository.ts
+
+    export interface UserProfileRepository {
+      getUserProfile(userId: string): Promise<UserProfile>;
+    }
+
+
+    // presentation/hooks/useGetUserProfile.ts
+
+    import { useQuery } from '@tanstack/react-query';
+
+    import { UserProfileRepository } from
+    '@/domain/repositories/UserProfileRepository';
+
+
+    export const useGetUserProfile = (userId: string, repo:
+    UserProfileRepository) => {
+      return useQuery(['userProfile', userId], () => repo.getUserProfile(userId));
+    };
+schema_version: 1

@@ -1,0 +1,31 @@
+id: completeness-004
+title: >-
+  Retry CTA가 원래 request intent(mode/type/payload)를 보존하지 않고 default로 silent
+  fallback
+category: completeness
+severity: major
+source_sprint: ai-webtoon
+source_group: group-003
+discovered_at: '2026-04-15T00:00:00+09:00'
+last_seen: ai-webtoon
+frequency: 1
+description: |
+  실패 후 재시도 CTA의 handler가 원래 요청의 mode/type/payload를 추적하지 않고
+  하드코드 default로 재호출하여 유저 intent가 silently 손실된다.
+  실제 사례: ai-webtoon webtoon-series-detail.screen.tsx:168-172 — handleRetry가
+  continuationType을 항상 AUTO로 제출. MANUAL 로 제출한 episode가 실패했을 때 재시도는
+  AUTO로 바뀌어 유저의 story beat input 이 폐기됨. Agent inline comment가 이를
+  "simplification" 으로 주석화하면서도 채택 — out-of-AC scope_creep.
+detection: |
+  - Retry handler의 파라미터가 하드코드된 상수인지 검사
+  - 실패 episode/resource에 origin-tracking 필드가 있는지 확인 (originType 등)
+  - Spec의 retry AC가 "preserve mode" vs "reset to default" 중 어느 쪽인지 명시 여부
+prevention: |
+  - 도메인 리소스(episode, generation 등)에 originType / originMode 필드 persist
+  - Retry handler는 해당 필드를 읽어 분기
+  - MANUAL 같은 입력 기반 mode는 재시도가 입력 화면 재진입 혹은 payload prefill 수반
+contract_clause: |
+  재시도 CTA는 원래 요청의 mode/type/payload를 보존해야 한다. 하드코드 default로
+  silently fallback하는 구현은 금지. 실패 이벤트가 mode-aware 하려면 originType을
+  리소스에 persist해야 한다.
+schema_version: 1

@@ -1,0 +1,41 @@
+id: code_quality-002
+title: 도메인 state 플래그를 repository write 부작용으로 flip (dual write site)
+category: code_quality
+severity: major
+source_sprint: ai-webtoon
+source_group: group-003
+discovered_at: '2026-04-15T00:00:00+09:00'
+last_seen: ai-webtoon
+frequency: 1
+description: >
+  도메인 state 플래그(`hasUnseenEpisode`, `hasNotification` 등)가 단일 domain-service
+
+  helper에서 flip되어야 하는데, 무관한 repository write operation($inc/$set 등)에
+
+  side-effect로 함께 기록되면서 이중 write path가 생긴다. 한 쪽 경로(예: PENDING insert)
+
+  에서 true로 쓰고, terminal 경로에서도 다시 true로 쓰면, 비-happy-path(PENDING→FAILED)
+
+  에서 false-positive 플래그가 남는다.
+
+  실제 사례: ai-webtoon webtoon-series.repository.ts:58-60 `incrementLastEpisode`
+  $set이
+
+  `hasUnseenEpisode:true`를 PENDING insert와 함께 쓰고, `markHasUnseenTrue`가 COMPLETED
+
+  callback에서 또 true로 씀. PENDING 중 FAILED로 끝나면 N-badge가 잘못 남음.
+detection: >
+  - 도메인 플래그를 검색해 write 경로 N개 수집 (grep `hasUnseenEpisode.*true`,
+  `$set.*hasUnseen`)
+
+  - Domain service helper 외 repository 메서드에서 직접 flip하는 경우 flag
+
+  - Spec/Hint에 "single helper" 조항이 있으면 Done Criteria 수준으로 승격
+prevention: |
+  - 도메인 상태 전환은 domain-service 단일 helper에서만 수행 (markXxxTrue/False)
+  - Repository write는 순수 CRUD에 한정 — 상태 플래그 side-effect 금지
+  - Evaluator 체크리스트에 "state flag grep → write path 1개" 검증 포함
+contract_clause: |
+  도메인 state 플래그(hasUnseenEpisode 등)는 단일 domain-service helper에서만 flip해야
+  한다. Repository의 일반 CRUD write에 side-effect로 묶는 것은 금지.
+schema_version: 1

@@ -1,0 +1,47 @@
+id: completeness-001
+title: 네비게이션 진입점 누락
+category: completeness
+severity: critical
+source_sprint: ugc-profile-nav-001
+source_group: group-002
+discovered_at: '2026-04-06T00:00:00+09:00'
+frequency: 1
+last_seen: ugc-profile-nav-001
+description: |
+  화면/기능을 구현했지만 해당 화면으로 이동하는 진입점(아이콘, 버튼, 탭)을
+  기존 화면에 배치하지 않아 사용자가 접근할 수 없다.
+  예: 설정 화면을 구현했지만 프로필 화면에 설정 아이콘이 없음.
+detection: |
+  - 새로 생성된 라우트/화면에 대해 진입점이 존재하는지 확인
+  - 네비게이션 플로우 다이어그램에서 고아 노드(연결 없는 화면) 검출
+  - PRD의 와이어프레임/UX 플로우와 실제 구현의 네비게이션 경로 대조
+prevention: |
+  - Sprint Contract에 '진입점' 체크리스트 항목 추가
+  - 화면 구현 시 반드시 진입점(from)과 도착점(to) 쌍으로 구현
+  - Evaluator가 네비게이션 그래프 완전성을 검증
+contract_clause: |
+  모든 신규 화면은 최소 1개 이상의 진입점(버튼/아이콘/탭)을 기존 화면에 배치한다.
+  Done Criteria에 '진입점 확인' 체크리스트를 포함한다.
+example:
+  bad: |
+    // SettingsScreen 구현 완료
+    // 하지만 ProfileScreen에 설정 아이콘이 없음
+    // 사용자가 SettingsScreen에 접근할 방법이 없음
+    const routes = [
+      { path: '/profile', component: ProfileScreen },
+      { path: '/settings', component: SettingsScreen },  // 고아 라우트
+    ];
+  good: |
+    // ProfileScreen에 설정 진입점 배치
+    const ProfileScreen = () => (
+      <Header
+        rightIcon={<SettingsIcon onPress={() => navigate('/settings')} />}
+      />
+      // ...
+    );
+
+    const routes = [
+      { path: '/profile', component: ProfileScreen },
+      { path: '/settings', component: SettingsScreen },  // 진입점 확보
+    ];
+schema_version: 1

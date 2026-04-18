@@ -1,0 +1,54 @@
+id: completeness-002
+title: 훅 생성 후 호출부 미구현
+category: completeness
+severity: major
+source_sprint: ugc-profile-nav-001
+source_group: group-002
+discovered_at: '2026-04-06T00:00:00+09:00'
+frequency: 1
+last_seen: ugc-profile-nav-001
+description: |
+  커스텀 훅(useGenerateNickname 등)을 정의만 하고
+  실제 UI 컴포넌트에서 호출하지 않아 기능이 동작하지 않는다.
+  훅 파일은 존재하지만 사용처가 없는 데드코드 상태.
+detection: |
+  - 신규 생성된 훅/유틸리티 파일에 대해 import 사용처 검색
+  - 사용처가 0인 export를 감지 (TypeScript unused exports)
+  - PRD의 기능 요구사항과 실제 호출 경로 대조
+prevention: |
+  - 훅/유틸리티 생성 시 반드시 호출부를 함께 구현
+  - TDD 방식: 호출부(테스트)를 먼저 작성하고 훅을 구현
+  - Evaluator가 unused exports를 검증
+contract_clause: |
+  신규 훅/유틸리티 함수는 최소 1개 이상의 호출부와 함께 구현한다.
+  호출부 없는 단독 훅 생성은 Done Criteria를 충족하지 않는다.
+example:
+  bad: |
+    // hooks/useGenerateNickname.ts ← 파일만 존재
+    export const useGenerateNickname = () => {
+      const mutation = useMutation(generateNickname);
+      return { generate: mutation.mutate, isLoading: mutation.isLoading };
+    };
+
+    // ProfileEditScreen.tsx ← 훅을 import하지 않음
+    const ProfileEditScreen = () => {
+      // 닉네임 생성 버튼은 있지만 useGenerateNickname을 호출하지 않음
+      return <Button onPress={() => {/* 미구현 */}}>닉네임 생성</Button>;
+    };
+  good: |
+    // hooks/useGenerateNickname.ts
+    export const useGenerateNickname = () => {
+      const mutation = useMutation(generateNickname);
+      return { generate: mutation.mutate, isLoading: mutation.isLoading };
+    };
+
+    // ProfileEditScreen.tsx ← 훅을 import하고 사용
+    import { useGenerateNickname } from '@/hooks/useGenerateNickname';
+
+    const ProfileEditScreen = () => {
+      const { generate, isLoading } = useGenerateNickname();
+      return (
+        <Button onPress={generate} loading={isLoading}>닉네임 생성</Button>
+      );
+    };
+schema_version: 1

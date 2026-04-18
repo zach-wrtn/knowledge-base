@@ -1,0 +1,28 @@
+id: correctness-003
+title: Pricing source와 Display source 혼재로 UI/생성 불일치
+category: correctness
+severity: major
+source_sprint: free-tab-diversification
+source_group: group-002
+discovered_at: '2026-04-14T00:00:00+09:00'
+frequency: 1
+last_seen: free-tab-diversification
+description: |
+  서버 응답의 파생 필드(requiredCredit, price 등)가 실제 생성 시 서버가 계산하는
+  eligibility와 다른 source를 참조할 때 UI에는 "무료"로 보이지만 생성 시 유료로
+  차감되는 불일치가 발생.
+  실제 사례: be-003에서 어제 EXPIRED 슬롯 폴백 응답도 `rosterSlotMap`에 포함되어
+  `requiredCredit=0`으로 렌더링 → 실제 generation 경로는 오늘 ACTIVE만 조회 →
+  유료 차감. 해소: `todayActiveSlots`(pricing) + `displaySlots`(themeTag 등 표시용)로 분리.
+detection: |
+  - API 응답 생성부 → 소비부 양쪽 코드 추적
+  - pricing 필드 계산 source와 실제 생성 경로 eligibility source가 동일한지 대조
+  - 폴백/스냅샷 응답에서 pricing 필드가 정상 상태와 동일한 기준을 사용하는지 검증
+prevention: |
+  - pricing source와 display source를 명시적으로 분리 (RosterContext 패턴)
+  - 폴백 응답 시 pricing은 basePrice로 유지, display용 메타만 유지
+  - Contract에 "pricing 필드는 실제 생성 eligibility와 일치" 명시
+contract_clause: |
+  서버 응답의 pricing 필드(requiredCredit 등)는 실제 생성 시 서버가 계산하는 값과
+  동일해야 한다. 폴백/스냅샷 응답도 실제 생성 경로의 eligibility와 일치해야 한다.
+schema_version: 1

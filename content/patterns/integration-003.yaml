@@ -1,0 +1,41 @@
+id: integration-003
+title: Concurrency cap source divergence (DB-sum vs Redis slot)
+category: integration
+severity: major
+source_sprint: ai-webtoon
+source_group: group-002
+discovered_at: '2026-04-15T00:00:00+09:00'
+last_seen: ai-webtoon
+frequency: 1
+description: >
+  동일한 concurrency cap(예: "유저당 동시 생성 최대 5개")을 공유하는 두 개 이상의
+
+  generation pipeline이 서로 다른 counter source를 사용하면, 한쪽 pipeline이 DB-sum
+
+  preflight만 쓰고 다른 쪽은 Redis atomic slot을 쓸 때 counter가 drift한다.
+
+  실제 사례: ai-webtoon be-002 webtoon submit은 `countAllInProgressByUser +
+
+  countInFlightByUser` DB 합산으로 cap 체크, meme submit은
+  `reserveGenerationSlotOrThrow`
+
+  (Redis INCR). webtoon이 INCR하지 않는데 status-change listener가 DECR → Redis counter
+
+  가 under-count되어 meme 쪽에서 transient cap breach 가능. `<0` 가드로 자가 치유되나
+
+  순간 breach window 존재.
+detection: |
+  - 동일 cap을 공유하는 두 파이프라인 submit 경로에서 counter-source 명령어(Redis INCR
+    vs DB aggregate) 일치 여부 grep
+  - Status change listener가 DECR하는 대상과 submit이 INCR하는 대상이 대칭인지 확인
+  - Mixed-load integration test: pipeline A N건 + pipeline B M건 동시에 submit → cap
+    breach 발생 여부 로그
+prevention: |
+  - 공유 cap의 counter는 단일 atomic primitive(Redis INCR slot 등)로 통합
+  - DB-sum preflight는 보조 guard 역할만, 단독 의존 금지
+  - 신규 pipeline이 기존 cap에 합류할 때 기존 slot primitive 재사용 의무화
+contract_clause: |
+  두 generation pipeline이 단일 concurrency cap을 공유하면 동일한 atomic counter
+  source(Redis slot 등)를 사용해야 한다. DB-sum preflight alone에 의존하는 pipeline이
+  다른 pipeline의 Redis counter와 공존하면 안 된다.
+schema_version: 1

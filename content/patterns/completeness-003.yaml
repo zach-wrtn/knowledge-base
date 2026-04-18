@@ -1,0 +1,29 @@
+id: completeness-003
+title: Navigation route.types에 param 추가 시 호출부 전달 누락
+category: completeness
+severity: major
+source_sprint: free-tab-diversification
+source_group: group-003
+discovered_at: '2026-04-14T00:00:00+09:00'
+frequency: 1
+last_seen: free-tab-diversification
+description: |
+  `route.types.ts`에 새로운 navigation param이 optional로 추가되면, 타입 정의만
+  존재하고 실제 `navigation.navigate` 호출부에서 전달이 누락되어 수신 측 컴포넌트가
+  기본값으로 떨어진다. 특히 CTA 분기 등 행동에 영향을 주는 param일 때 치명적.
+  실제 사례: app-001 `FreeTabScreen.handleCardPress`가 `freeUsedToday`를 route.types에
+  선언했으나 `navigation.navigate` 호출에서 전달 누락 → SwipeFeed CTA가 기본값 false로
+  떨어져 AC 2.6.2 위반.
+detection: |
+  - `grep`으로 해당 ScreenName을 타겟하는 모든 `navigation.navigate` 호출부 수집
+  - 신규 param이 전달되는지 각 호출부 확인
+  - `useCallback`/`useMemo` deps 배열에 신규 param이 포함되어 있는지 (stale closure 회피)
+prevention: |
+  - TypeScript의 required param 활용 (optional 대신 required로 선언)
+  - 전달 강제 helper 함수 도입 (navigateToSwipeFeed(params) 등)
+  - Contract에 "route.types.ts 신규 param → 모든 호출부 전달" 명시
+contract_clause: |
+  route.types.ts에 새 navigation param을 추가하면, 모든 navigation.navigate
+  호출부에서 해당 param을 전달하고 useCallback deps에 포함해야 한다.
+  Deep link 경로 등 params 없는 진입에서도 기본값/fallback 동작 보장.
+schema_version: 1
