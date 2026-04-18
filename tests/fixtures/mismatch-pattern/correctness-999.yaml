@@ -1,0 +1,14 @@
+id: "correctness-001"
+title: "Filename says 999 but id says 001"
+category: "correctness"
+severity: "minor"
+source_sprint: "test"
+source_group: "group-001"
+discovered_at: "2026-04-18T00:00:00+09:00"
+frequency: 1
+last_seen: "test"
+description: "Intentional mismatch for validator testing."
+detection: "validator must flag this."
+prevention: "filename and id must match."
+contract_clause: "filename matches id."
+schema_version: 1
