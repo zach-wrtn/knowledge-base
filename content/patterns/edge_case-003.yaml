@@ -1,0 +1,21 @@
+id: edge_case-003
+title: "Worker A write overlapping with Worker B push (rebase-retry simulation)"
+category: edge_case
+severity: minor
+source_sprint: kb-phase1-dogfood
+source_group: group-002
+discovered_at: "2026-04-19T04:41:00+09:00"
+frequency: 1
+last_seen: kb-phase1-dogfood
+description: |
+  Worker A가 local main(old)에서 작업 중, Worker B가 먼저 push하여 origin/main이 선행한 상황.
+  A가 그대로 push 시도하면 non-fast-forward로 거부되어야 한다 (정상 동작).
+detection: |
+  - `git push` returns `! [rejected]` with reason `non-fast-forward` or `fetch first`.
+prevention: |
+  스킬 루프(`for i in 1 2 3; do pull --rebase && push; done`)가 자동 해결.
+  rebase 충돌이 없는 경우(다른 파일 쓰기) 재시도 1회로 해소됨.
+contract_clause: |
+  Concurrent writer를 가정하고, write 스킬은 항상 rebase-retry 루프를 돌려야 한다.
+  비상호 배타적 파일(서로 다른 content file) 쓰기는 충돌 없이 rebase로 merge 가능.
+schema_version: 1
