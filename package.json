@@ -1,0 +1,24 @@
+{
+  "name": "@zach-wrtn/knowledge-base",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Machine-readable team knowledge base.",
+  "scripts": {
+    "validate:schemas": "node scripts/validate-fixtures.mjs",
+    "validate:content": "node scripts/validate-filename-id-match.mjs && node scripts/validate-unique-ids.mjs && node scripts/validate-markdown-frontmatter.mjs",
+    "validate:skills": "node scripts/validate-skill-frontmatter.mjs",
+    "validate:backcompat": "node scripts/validate-schema-backwards-compat.mjs",
+    "validate": "npm run validate:content && npm run validate:skills && npm run validate:backcompat",
+    "migrate": "node scripts/migrate-from-orchestrator.mjs"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "gray-matter": "^4.0.3",
+    "js-yaml": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
