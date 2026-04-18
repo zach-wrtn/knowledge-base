@@ -1,0 +1,18 @@
+id: "correctness-001"
+title: "커서 페이지네이션 DTO 이중 래핑"
+category: "correctness"
+severity: "critical"
+source_sprint: "ugc-profile-nav-001"
+source_group: "group-001"
+discovered_at: "2026-04-06T00:00:00+09:00"
+frequency: 1
+last_seen: "ugc-profile-nav-001"
+description: |
+  Controller에서 Service가 반환한 CursorResponseDto를 다시 래핑하는 패턴.
+detection: |
+  Controller 메서드에서 CursorResponseDto를 재생성하는 코드 확인.
+prevention: |
+  Service가 완성된 CursorResponseDto를 반환, Controller는 패스스루.
+contract_clause: |
+  페이지네이션 API는 Controller에서 DTO를 재래핑하지 않는다.
+schema_version: 1
