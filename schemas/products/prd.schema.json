@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zach-wrtn.github.io/knowledge-base/schemas/products/prd.schema.json",
+  "title": "PRD (frontmatter only)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["product", "status", "last_updated", "schema_version"],
+  "properties": {
+    "product":        { "enum": ["ai-webtoon", "free-tab", "ugc-platform"] },
+    "status":         { "enum": ["draft", "active", "archived"] },
+    "owner":          { "type": "string" },
+    "last_updated":   { "type": "string", "format": "date" },
+    "related_sprints": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+$" }
+    },
+    "schema_version": { "const": 1 }
+  }
+}

@@ -19,20 +19,37 @@ Override the clone path with `ZZEM_KB_PATH=/custom/path`.
 | Skill | Purpose |
 |-------|---------|
 | `zzem-kb:sync` | Pull latest KB state |
-| `zzem-kb:read` | Query by type/category/severity/domain |
-| `zzem-kb:write-pattern` | Create a new defect pattern |
-| `zzem-kb:update-pattern` | Bump frequency / last_seen of an existing pattern |
-| `zzem-kb:write-reflection` | Record a sprint retrospective |
+| `zzem-kb:read` | Query any content type (pattern/rubric/reflection/prd/events) |
+| `zzem-kb:write-pattern` | Create a new defect pattern (axis 1) |
+| `zzem-kb:update-pattern` | Bump frequency / last_seen of an existing pattern (axis 1) |
+| `zzem-kb:write-reflection` | Record a sprint retrospective (axis 1) |
+
+Axis-2 content (PRD, events) is authored with the Write tool directly — no
+dedicated skill. See `products/README.md` for the workflow.
 
 Each skill's `SKILL.md` is the authoritative protocol; agents invoke them via the Skill tool.
 
 ## Content types
 
+Two axes: `learning/` (self-improving meta-knowledge) and `products/` (per-product specs).
+
+### Axis 1 — `learning/`
+
 | Type | Directory | Schema | Filename |
 |------|-----------|--------|----------|
-| pattern | `content/patterns/` | `schemas/pattern.schema.json` | `{category}-{NNN}.yaml` |
-| rubric | `content/rubrics/` | `schemas/rubric.schema.json` | `v{N}.md` |
-| reflection | `content/reflections/` | `schemas/reflection.schema.json` | `{sprint-id}.md` |
+| pattern | `learning/patterns/` | `schemas/learning/pattern.schema.json` | `{category}-{NNN}.yaml` |
+| rubric | `learning/rubrics/` | `schemas/learning/rubric.schema.json` | `v{N}.md` |
+| reflection | `learning/reflections/` | `schemas/learning/reflection.schema.json` | `{sprint-id}.md` |
+
+### Axis 2 — `products/`
+
+| Type | Directory | Schema | Filename |
+|------|-----------|--------|----------|
+| prd | `products/{product}/` | `schemas/products/prd.schema.json` | `prd.md` |
+| events | `products/{product}/` | `schemas/products/events.schema.json` | `events.yaml` |
+
+`{product}` ∈ `{ai-webtoon, free-tab, ugc-platform}`. See `products/README.md`
+for authoring.
 
 ## Contributing
 

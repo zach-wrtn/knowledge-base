@@ -11,7 +11,7 @@ function collect(dir) {
 }
 
 function mainDir() {
-  return join(ROOT, "content", "patterns");
+  return join(ROOT, "learning", "patterns");
 }
 
 function runOn(dir) {

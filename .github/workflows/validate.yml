@@ -16,7 +16,8 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npm run validate:schemas
-      - run: npm run validate:content
+      - run: npm run validate:learning
+      - run: npm run validate:products
       # test:install-skills runs here (not last) so CI fails fast on symlink
       # regressions before skill/backcompat checks. The npm `validate` aggregator
       # puts it last so local `npm run validate` surfaces content/skill failures

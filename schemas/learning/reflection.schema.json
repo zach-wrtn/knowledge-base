@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://zach-wrtn.github.io/knowledge-base/schemas/reflection.schema.json",
+  "$id": "https://zach-wrtn.github.io/knowledge-base/schemas/learning/reflection.schema.json",
   "title": "Reflection (frontmatter only)",
   "type": "object",
   "additionalProperties": false,
   "required": ["sprint_id", "domain", "completed_at", "outcome", "schema_version"],
   "properties": {
     "sprint_id":    { "type": "string", "pattern": "^[a-z0-9-]+$" },
-    "domain":       { "type": "string" },
+    "domain":       { "enum": ["ai-webtoon", "free-tab", "ugc-platform", "infra"] },
     "completed_at": { "type": "string", "format": "date-time" },
     "outcome":      { "enum": ["pass", "fail", "partial"] },
     "related_patterns": {

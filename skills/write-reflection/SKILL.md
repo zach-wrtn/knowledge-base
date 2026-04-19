@@ -7,7 +7,7 @@ description: Record a sprint-end reflection (markdown + frontmatter) and push to
 
 ## Inputs
 - `sprint_id` — required, lowercase-hyphen.
-- `domain` — required (e.g. `ai-webtoon`, `ugc-platform`).
+- `domain` — required. Must be one of: `ai-webtoon`, `free-tab`, `ugc-platform`, `infra`. See `schemas/learning/reflection.schema.json` for the source of truth.
 - `completed_at` — ISO 8601 with offset.
 - `outcome` — one of `pass | fail | partial`.
 - `related_patterns` — optional array of pattern ids.
@@ -23,7 +23,7 @@ description: Record a sprint-end reflection (markdown + frontmatter) and push to
    Bash: `cd "$ZZEM_KB_PATH" && git checkout main && git pull --ff-only`
 
 2. **Write file**
-   Write: `content/reflections/{sprint_id}.md`
+   Write: `learning/reflections/{sprint_id}.md`
 
    Content:
    ```
@@ -41,13 +41,13 @@ description: Record a sprint-end reflection (markdown + frontmatter) and push to
    ```
 
 3. **Validate frontmatter**
-   Bash: `cd "$ZZEM_KB_PATH" && npm run validate:content`
+   Bash: `cd "$ZZEM_KB_PATH" && npm run validate:learning`
 
 4. **Commit + rebase-retry push**
    Bash:
    ```
    cd "$ZZEM_KB_PATH"
-   git add content/reflections/{sprint_id}.md
+   git add learning/reflections/{sprint_id}.md
    git commit -m "reflection: {sprint_id} ({outcome})"
    for i in 1 2 3; do
      if git pull --rebase origin main && git push; then exit 0; fi

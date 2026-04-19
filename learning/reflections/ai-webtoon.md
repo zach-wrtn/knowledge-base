@@ -1,6 +1,6 @@
 ---
 sprint_id: ai-webtoon
-domain: ai
+domain: ai-webtoon
 completed_at: '2026-04-01T00:00:00+09:00'
 outcome: pass
 schema_version: 1

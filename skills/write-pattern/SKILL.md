@@ -29,14 +29,14 @@ description: Create a new pattern YAML, validate against schema, commit, and pus
    ```
 
 2. **Determine next id**
-   Glob: `content/patterns/{category}-*.yaml`
+   Glob: `learning/patterns/{category}-*.yaml`
    Parse `NNN` suffix; take `max + 1`; zero-pad to 3 digits. Next id = `{category}-{NNN}`.
 
 3. **Read schema for reference**
-   Read: `schemas/pattern.schema.json`
+   Read: `schemas/learning/pattern.schema.json`
 
 4. **Compose the YAML**
-   Write: `content/patterns/{id}.yaml`
+   Write: `learning/patterns/{id}.yaml`
 
    Fields to emit:
    - `id`, `title`, `category`, `severity`, `source_sprint`, `source_group`
@@ -51,14 +51,14 @@ description: Create a new pattern YAML, validate against schema, commit, and pus
    Bash:
    ```
    cd "$ZZEM_KB_PATH"
-   npm run validate:content || { echo "validation failed; fix and re-run from step 4"; exit 1; }
+   npm run validate:learning || { echo "validation failed; fix and re-run from step 4"; exit 1; }
    ```
 
 6. **Commit + rebase-retry push**
    Bash:
    ```
    cd "$ZZEM_KB_PATH"
-   git add content/patterns/{id}.yaml
+   git add learning/patterns/{id}.yaml
    git commit -m "pattern: {id} from {source_sprint}/{source_group}"
    for i in 1 2 3; do
      if git pull --rebase origin main && git push; then exit 0; fi
@@ -75,6 +75,6 @@ description: Create a new pattern YAML, validate against schema, commit, and pus
 
 ## Verification (smoke)
 Invoke with a dummy pattern in a throwaway branch; verify:
-- File appears at `content/patterns/{id}.yaml`.
+- File appears at `learning/patterns/{id}.yaml`.
 - CI `validate` passes on the resulting push.
 - `gh pr list` is empty (direct push permitted for content).

@@ -1,0 +1,14 @@
+product: ai-webtoon
+owner: zach
+last_updated: "2026-04-19"
+schema_version: 1
+events:
+  - name: onboarding_started
+    trigger: "User lands on /onboarding"
+    properties:
+      source: "string — referrer host or 'direct'"
+    notes: "First event fired on signup flow"
+  - name: onboarding_completed
+    trigger: "User reaches /onboarding/done"
+    properties:
+      duration_ms: "integer — total time in onboarding"

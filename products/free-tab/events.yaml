@@ -1,0 +1,8 @@
+product: free-tab
+last_updated: "2026-04-19"
+schema_version: 1
+events:
+  - name: placeholder_event
+    trigger: "Remove when real events are added"
+    properties: {}
+    notes: "Stub to satisfy events schema minItems: 1. Replace in Phase 2.1+."
