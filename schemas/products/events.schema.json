@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zach-wrtn.github.io/knowledge-base/schemas/products/events.schema.json",
+  "title": "Event design",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["product", "last_updated", "events", "schema_version"],
+  "properties": {
+    "product":        { "enum": ["ai-webtoon", "free-tab", "ugc-platform"] },
+    "owner":          { "type": "string" },
+    "last_updated":   { "type": "string", "format": "date" },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "trigger", "properties"],
+        "properties": {
+          "name":       { "type": "string", "pattern": "^[a-z][a-z0-9_]+$" },
+          "trigger":    { "type": "string", "minLength": 5 },
+          "properties": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          },
+          "notes":      { "type": "string" }
+        }
+      }
+    },
+    "schema_version": { "const": 1 }
+  }
+}
