@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zach-wrtn.github.io/knowledge-base/schemas/products/notion-prds.schema.json",
+  "title": "Notion PRD Index (synced, flat list)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source", "synced_at", "prds", "schema_version"],
+  "properties": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "database_id"],
+      "properties": {
+        "kind":        { "const": "notion-database" },
+        "database_id": { "type": "string", "pattern": "^[a-f0-9]{32}$" },
+        "url":         { "type": "string", "format": "uri" },
+        "title":       { "type": "string" }
+      }
+    },
+    "synced_at":      { "type": "string", "format": "date-time" },
+    "synced_by":      { "type": "string" },
+    "prds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "url"],
+        "properties": {
+          "id":              { "type": "string", "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$" },
+          "title":           { "type": "string", "minLength": 1 },
+          "domain":          { "type": "string" },
+          "status":          { "type": "string" },
+          "description":     { "type": "string" },
+          "kpi_contribution":{ "type": "string" },
+          "assignees":       { "type": "array", "items": { "type": "string" } },
+          "url":             { "type": "string", "format": "uri" },
+          "created_time":    { "type": "string", "format": "date-time" },
+          "last_edited_time":{ "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "schema_version": { "const": 1 }
+  }
+}

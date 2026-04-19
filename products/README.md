@@ -7,13 +7,18 @@ holds a single current-truth `prd.md` and `events.yaml`.
 
 ```
 products/
-  ai-webtoon/    prd.md  events.yaml
-  free-tab/      prd.md  events.yaml
-  ugc-platform/  prd.md  events.yaml
+  ai-webtoon/      prd.md  events.yaml
+  free-tab/        prd.md  events.yaml
+  ugc-platform/    prd.md  events.yaml
+  notion-prds.yaml    # Notion-synced PRD index (flat, read-only)
 ```
 
 Product directory names MUST match the `product` enum in
 `schemas/products/prd.schema.json` and `schemas/products/events.schema.json`.
+
+`notion-prds.yaml` at the top level is a **read-only snapshot** of the Notion
+PRD database. Do not hand-edit. Refresh via the `zzem-kb:sync-prds-from-notion`
+skill (requires Notion MCP). Schema: `schemas/products/notion-prds.schema.json`.
 
 ## Authoring workflow
 

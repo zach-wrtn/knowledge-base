@@ -8,7 +8,7 @@ import matter from "gray-matter";
 const ROOT = new URL("..", import.meta.url).pathname;
 const SCHEMA_DIRS = {
   pattern: "learning", reflection: "learning", rubric: "learning",
-  prd: "products",    events: "products",
+  prd: "products",    events: "products",    "notion-prds": "products",
 };
 const schemaPath = (name) => {
   const dir = SCHEMA_DIRS[name];
@@ -49,6 +49,9 @@ const cases = [
   { schema: "events",      fixture: "invalid-events-bad-name.yaml",           expect: "invalid", loader: loadYaml },
   { schema: "events",      fixture: "invalid-events-missing-trigger.yaml",    expect: "invalid", loader: loadYaml },
   { schema: "events",      fixture: "invalid-events-empty.yaml",              expect: "invalid", loader: loadYaml },
+  { schema: "notion-prds", fixture: "valid-notion-prds.yaml",                 expect: "valid",   loader: loadYaml },
+  { schema: "notion-prds", fixture: "invalid-notion-prds-bad-db-id.yaml",     expect: "invalid", loader: loadYaml },
+  { schema: "notion-prds", fixture: "invalid-notion-prds-missing-synced-at.yaml", expect: "invalid", loader: loadYaml },
 ];
 
 const validators = {};

@@ -1,0 +1,6 @@
+source:
+  kind: notion-database
+  database_id: NOT_A_VALID_ID
+synced_at: "2026-04-19T12:00:00+09:00"
+prds: []
+schema_version: 1

@@ -19,6 +19,7 @@ function loadSchema(name) {
 
 const validatePrd = loadSchema("prd");
 const validateEvents = loadSchema("events");
+const validateNotionPrds = loadSchema("notion-prds");
 
 function listProductDirs() {
   if (!existsSync(productsDir)) return [];
@@ -65,6 +66,16 @@ for (const dir of listProductDirs()) {
       console.error(`FAIL  ${eventsPath}: product field "${doc.product}" does not match directory "${product}"`);
       failed++;
     }
+  }
+}
+
+// notion-prds.yaml (optional top-level index)
+const notionPrdsPath = join(productsDir, "notion-prds.yaml");
+if (existsSync(notionPrdsPath)) {
+  const doc = yaml.load(readFileSync(notionPrdsPath, "utf8"));
+  if (!validateNotionPrds(doc)) {
+    console.error(`FAIL  ${notionPrdsPath}: ${JSON.stringify(validateNotionPrds.errors)}`);
+    failed++;
   }
 }
 

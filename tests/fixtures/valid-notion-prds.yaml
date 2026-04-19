@@ -1,0 +1,23 @@
+source:
+  kind: notion-database
+  database_id: 22c0159c6b598017903ff16d077e87dd
+  url: https://www.notion.so/22c0159c6b598017903ff16d077e87dd
+  title: PRD
+synced_at: "2026-04-19T12:00:00+09:00"
+synced_by: zach@wrtn.io
+prds:
+  - id: 22d0159c-6b59-80b9-85f5-c0643ff9c033
+    title: MVP
+    domain: ZZEM
+    status: 완료
+    url: https://www.notion.so/22d0159c6b5980b985f5c0643ff9c033
+    created_time: "2025-07-10T07:30:00+00:00"
+    last_edited_time: "2026-04-16T14:59:00+00:00"
+  - id: 2c50159c-6b59-806a-bf16-dc33fe45cf0b
+    title: "밈 앱 분리 (ZZEM 출시)"
+    domain: ZZEM
+    status: 완료
+    url: https://www.notion.so/2c50159c6b59806abf16dc33fe45cf0b
+    created_time: "2025-09-01T00:00:00+00:00"
+    last_edited_time: "2026-01-15T10:00:00+00:00"
+schema_version: 1
