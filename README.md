@@ -23,6 +23,7 @@ Override the clone path with `ZZEM_KB_PATH=/custom/path`.
 | `zzem-kb:write-pattern` | Create a new defect pattern (axis 1) |
 | `zzem-kb:update-pattern` | Bump frequency / last_seen of an existing pattern (axis 1) |
 | `zzem-kb:write-reflection` | Record a sprint retrospective (axis 1) |
+| `zzem-kb:promote-rubric` | Append a row to the active rubric's Promotion Log (axis 1) |
 
 Axis-2 content (PRD, events) is authored with the Write tool directly — no
 dedicated skill. See `products/README.md` for the workflow.
