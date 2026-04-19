@@ -6,7 +6,15 @@ import yaml from "js-yaml";
 import matter from "gray-matter";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-const schemaPath = (name) => join(ROOT, "schemas", "learning", `${name}.schema.json`);
+const SCHEMA_DIRS = {
+  pattern: "learning", reflection: "learning", rubric: "learning",
+  prd: "products",    events: "products",
+};
+const schemaPath = (name) => {
+  const dir = SCHEMA_DIRS[name];
+  if (!dir) throw new Error(`unknown schema: ${name}`);
+  return join(ROOT, "schemas", dir, `${name}.schema.json`);
+};
 const fixturePath = (name) => join(ROOT, "tests", "fixtures", name);
 
 const ajv = new Ajv({ strict: false, allErrors: true });
@@ -34,6 +42,13 @@ const cases = [
   { schema: "rubric",      fixture: "valid-rubric.md",                        expect: "valid", loader: loadFrontmatter },
   { schema: "rubric",      fixture: "invalid-rubric-missing-frontmatter.md",  expect: "invalid", loader: loadFrontmatter },
   { schema: "reflection",  fixture: "valid-reflection.md",                    expect: "valid", loader: loadFrontmatter },
+  { schema: "prd",         fixture: "valid-prd.md",                           expect: "valid",   loader: loadFrontmatter },
+  { schema: "prd",         fixture: "invalid-prd-bad-product.md",             expect: "invalid", loader: loadFrontmatter },
+  { schema: "prd",         fixture: "invalid-prd-missing-status.md",          expect: "invalid", loader: loadFrontmatter },
+  { schema: "events",      fixture: "valid-events.yaml",                      expect: "valid",   loader: loadYaml },
+  { schema: "events",      fixture: "invalid-events-bad-name.yaml",           expect: "invalid", loader: loadYaml },
+  { schema: "events",      fixture: "invalid-events-missing-trigger.yaml",    expect: "invalid", loader: loadYaml },
+  { schema: "events",      fixture: "invalid-events-empty.yaml",              expect: "invalid", loader: loadYaml },
 ];
 
 const validators = {};
