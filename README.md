@@ -24,6 +24,7 @@ Override the clone path with `ZZEM_KB_PATH=/custom/path`.
 | `zzem-kb:update-pattern` | Bump frequency / last_seen of an existing pattern (axis 1) |
 | `zzem-kb:write-reflection` | Record a sprint retrospective (axis 1) |
 | `zzem-kb:promote-rubric` | Append a row to the active rubric's Promotion Log (axis 1) |
+| `zzem-kb:sync-prds-from-notion` | Snapshot the Notion PRD database into `products/notion-prds.yaml` (axis 2, read-only index). Requires Notion MCP. |
 
 Axis-2 content (PRD, events) is authored with the Write tool directly — no
 dedicated skill. See `products/README.md` for the workflow.
@@ -48,9 +49,11 @@ Two axes: `learning/` (self-improving meta-knowledge) and `products/` (per-produ
 |------|-----------|--------|----------|
 | prd | `products/{product}/` | `schemas/products/prd.schema.json` | `prd.md` |
 | events | `products/{product}/` | `schemas/products/events.schema.json` | `events.yaml` |
+| notion-prds (index) | `products/` | `schemas/products/notion-prds.schema.json` | `notion-prds.yaml` |
 
 `{product}` ∈ `{ai-webtoon, free-tab, ugc-platform}`. See `products/README.md`
-for authoring.
+for authoring. `notion-prds.yaml` is a Notion-synced flat index (read-only;
+sourced via `zzem-kb:sync-prds-from-notion`).
 
 ## Contributing
 
