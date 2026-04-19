@@ -10,7 +10,7 @@
     "validate:skills": "node scripts/validate-skill-frontmatter.mjs",
     "validate:backcompat": "node scripts/validate-schema-backwards-compat.mjs",
     "test:install-skills": "bash tests/install-skills.test.sh",
-    "validate": "npm run validate:schemas && npm run validate:content && npm run test:install-skills && npm run validate:skills && npm run validate:backcompat",
+    "validate": "npm run validate:schemas && npm run validate:content && npm run validate:skills && npm run validate:backcompat && npm run test:install-skills",
     "migrate": "node scripts/migrate-from-orchestrator.mjs"
   },
   "devDependencies": {
