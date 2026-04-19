@@ -7,7 +7,7 @@
   "required": ["sprint_id", "domain", "completed_at", "outcome", "schema_version"],
   "properties": {
     "sprint_id":    { "type": "string", "pattern": "^[a-z0-9-]+$" },
-    "domain":       { "type": "string" },
+    "domain":       { "enum": ["ai-webtoon", "free-tab", "ugc-platform", "infra"] },
     "completed_at": { "type": "string", "format": "date-time" },
     "outcome":      { "enum": ["pass", "fail", "partial"] },
     "related_patterns": {
