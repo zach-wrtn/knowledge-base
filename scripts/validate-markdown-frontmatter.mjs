@@ -9,7 +9,7 @@ const ajv = new Ajv({ strict: false, allErrors: true });
 addFormats(ajv);
 
 function loadSchema(name) {
-  return ajv.compile(JSON.parse(readFileSync(join(ROOT, "schemas", `${name}.schema.json`), "utf8")));
+  return ajv.compile(JSON.parse(readFileSync(join(ROOT, "schemas", "learning", `${name}.schema.json`), "utf8")));
 }
 
 function collectMd(dir) {
@@ -21,8 +21,8 @@ function collectMd(dir) {
 }
 
 const targets = [
-  { dir: join(ROOT, "content/rubrics"),      schema: loadSchema("rubric") },
-  { dir: join(ROOT, "content/reflections"),  schema: loadSchema("reflection") },
+  { dir: join(ROOT, "learning/rubrics"),      schema: loadSchema("rubric") },
+  { dir: join(ROOT, "learning/reflections"),  schema: loadSchema("reflection") },
 ];
 
 let failed = 0;

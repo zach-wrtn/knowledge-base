@@ -10,7 +10,7 @@ const ajv = new Ajv({ strict: false, allErrors: true });
 addFormats(ajv);
 
 function schema(name) {
-  return ajv.compile(JSON.parse(readFileSync(join(ROOT, "schemas", `${name}.schema.json`), "utf8")));
+  return ajv.compile(JSON.parse(readFileSync(join(ROOT, "schemas", "learning", `${name}.schema.json`), "utf8")));
 }
 function collect(dir, ext) {
   if (!existsSync(dir)) return [];
@@ -21,9 +21,9 @@ function collect(dir, ext) {
 }
 
 const targets = [
-  { dir: join(ROOT, "content/patterns"),     ext: ".yaml", validate: schema("pattern"),    loader: (f) => yaml.load(readFileSync(f, "utf8")) },
-  { dir: join(ROOT, "content/rubrics"),      ext: ".md",   validate: schema("rubric"),     loader: (f) => matter(readFileSync(f, "utf8")).data },
-  { dir: join(ROOT, "content/reflections"),  ext: ".md",   validate: schema("reflection"), loader: (f) => matter(readFileSync(f, "utf8")).data },
+  { dir: join(ROOT, "learning/patterns"),     ext: ".yaml", validate: schema("pattern"),    loader: (f) => yaml.load(readFileSync(f, "utf8")) },
+  { dir: join(ROOT, "learning/rubrics"),      ext: ".md",   validate: schema("rubric"),     loader: (f) => matter(readFileSync(f, "utf8")).data },
+  { dir: join(ROOT, "learning/reflections"),  ext: ".md",   validate: schema("reflection"), loader: (f) => matter(readFileSync(f, "utf8")).data },
 ];
 
 let failed = 0;

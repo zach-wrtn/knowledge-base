@@ -6,7 +6,7 @@ import yaml from "js-yaml";
 import matter from "gray-matter";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-const schemaPath = (name) => join(ROOT, "schemas", `${name}.schema.json`);
+const schemaPath = (name) => join(ROOT, "schemas", "learning", `${name}.schema.json`);
 const fixturePath = (name) => join(ROOT, "tests", "fixtures", name);
 
 const ajv = new Ajv({ strict: false, allErrors: true });

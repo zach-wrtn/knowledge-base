@@ -30,7 +30,7 @@ function runOn(dirs) {
 
 const dirs = process.argv.length > 2
   ? process.argv.slice(2).map((p) => join(ROOT, p))
-  : [join(ROOT, "content/patterns"), join(ROOT, "archived/patterns")];
+  : [join(ROOT, "learning/patterns"), join(ROOT, "archived/patterns")];
 
 if (runOn(dirs) > 0) process.exit(1);
 console.log(`unique ids OK (${dirs.length} dir(s) checked)`);

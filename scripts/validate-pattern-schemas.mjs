@@ -9,7 +9,7 @@ const ROOT = new URL("..", import.meta.url).pathname;
 const ajv = new Ajv({ strict: false, allErrors: true });
 addFormats(ajv);
 const validate = ajv.compile(
-  JSON.parse(readFileSync(join(ROOT, "schemas", "pattern.schema.json"), "utf8"))
+  JSON.parse(readFileSync(join(ROOT, "schemas", "learning", "pattern.schema.json"), "utf8"))
 );
 
 function collectYaml(dir) {
@@ -36,7 +36,7 @@ function runOn(dir) {
 
 const target = process.argv[2]
   ? join(ROOT, process.argv[2])
-  : join(ROOT, "content", "patterns");
+  : join(ROOT, "learning", "patterns");
 
 const failed = runOn(target);
 if (failed > 0) {
