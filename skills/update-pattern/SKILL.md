@@ -19,7 +19,7 @@ description: Increment the frequency counter and refresh last_seen on an existin
    Bash: `cd "$ZZEM_KB_PATH" && git checkout main && git pull --ff-only`
 
 2. **Locate and parse file**
-   Read: `content/patterns/{id}.yaml`
+   Read: `learning/patterns/{id}.yaml`
    If missing: abort, report "pattern not found".
 
 3. **Mutate frequency + last_seen**
@@ -29,13 +29,13 @@ description: Increment the frequency counter and refresh last_seen on an existin
    Leave every other field untouched (especially `discovered_at`).
 
 4. **Validate**
-   Bash: `cd "$ZZEM_KB_PATH" && npm run validate:content`
+   Bash: `cd "$ZZEM_KB_PATH" && npm run validate:learning`
 
 5. **Commit + rebase-retry push**
    Bash:
    ```
    cd "$ZZEM_KB_PATH"
-   git add content/patterns/{id}.yaml
+   git add learning/patterns/{id}.yaml
    git commit -m "pattern: {id} frequency +1 ({source_sprint})"
    for i in 1 2 3; do
      if git pull --rebase origin main && git push; then exit 0; fi
@@ -50,4 +50,4 @@ description: Increment the frequency counter and refresh last_seen on an existin
 - Validate fails → pattern file was unexpectedly malformed; surface to caller.
 
 ## Verification (smoke)
-Pick an existing pattern (say `correctness-001`), invoke with a test sprint id. Diff on `content/patterns/correctness-001.yaml` must show only `frequency` incremented and `last_seen` updated.
+Pick an existing pattern (say `correctness-001`), invoke with a test sprint id. Diff on `learning/patterns/correctness-001.yaml` must show only `frequency` incremented and `last_seen` updated.
