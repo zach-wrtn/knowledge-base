@@ -6,10 +6,11 @@
   "description": "Machine-readable team knowledge base.",
   "scripts": {
     "validate:schemas": "node scripts/validate-fixtures.mjs",
-    "validate:content": "node scripts/validate-filename-id-match.mjs && node scripts/validate-unique-ids.mjs && node scripts/validate-markdown-frontmatter.mjs",
+    "validate:content": "node scripts/validate-filename-id-match.mjs && node scripts/validate-unique-ids.mjs && node scripts/validate-pattern-schemas.mjs && node scripts/validate-markdown-frontmatter.mjs",
     "validate:skills": "node scripts/validate-skill-frontmatter.mjs",
     "validate:backcompat": "node scripts/validate-schema-backwards-compat.mjs",
-    "validate": "npm run validate:content && npm run validate:skills && npm run validate:backcompat",
+    "test:install-skills": "bash tests/install-skills.test.sh",
+    "validate": "npm run validate:schemas && npm run validate:content && npm run validate:skills && npm run validate:backcompat && npm run test:install-skills",
     "migrate": "node scripts/migrate-from-orchestrator.mjs"
   },
   "devDependencies": {
