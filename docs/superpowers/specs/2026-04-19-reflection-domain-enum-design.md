@@ -1,7 +1,9 @@
 # Reflection `domain` Enum Standardization (Phase 1.2)
 
+> **Status**: Superseded by [`2026-04-19-kb-two-axis-architecture-design.md`](./2026-04-19-kb-two-axis-architecture-design.md) — §3 absorbs this work. Retained for history.
+
 - **Date**: 2026-04-19
-- **Status**: Draft — awaiting implementation
+- **Status**: Superseded (absorbed into Phase 2 two-axis architecture)
 - **Owner**: zach-wrtn
 - **Tracks**: follow-up from `content/reflections/kb-phase1-dogfood.md` (§Recommendations for Phase 2 #5, Followups #3)
 
