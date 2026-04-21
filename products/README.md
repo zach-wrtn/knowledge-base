@@ -1,7 +1,11 @@
 # products/ (Axis 2: Product Specs)
 
-Canonical per-product specs consumed by sprints. One folder per product; each
-holds a single current-truth `prd.md` and `events.yaml`.
+Per-product artifacts consumed by sprints. Two layers:
+
+- **Overview layer** — `products/{product}/prd.md` is the **product's current-state overview** (summary, scope, boundaries) plus an index table of active feature PRDs. Hand-authored. Manually maintained.
+- **Mirror layer** — `products/active-prds/{notion-id}.md` are **full feature-PRD bodies** mirrored from Notion's `상태 = 진행 중` pages. Auto-synced; never hand-edited.
+
+Notion is the SSOT for PRD **content**; the KB overview is the SSOT for how feature PRDs **relate** to a product and to each other (phases, dependencies, sprint links).
 
 ## Structure
 
@@ -42,7 +46,7 @@ git push
 
 ## Field rules
 
-### prd.md frontmatter
+### prd.md frontmatter (overview layer)
 
 | field | required | notes |
 |---|---|---|
@@ -51,9 +55,21 @@ git push
 | `owner` | no | free-form |
 | `last_updated` | yes | ISO date (`YYYY-MM-DD`) — update on every edit |
 | `related_sprints` | no | array of sprint ids (e.g. `["free-tab-diversification"]`) |
+| `active_prds` | no | array of Notion page ids (UUID with dashes) — each id must have a matching file under `products/active-prds/{id-without-dashes}.md`. Keep this in sync when a feature PRD transitions in/out of `진행 중` |
 | `schema_version` | yes | `1` for now |
 
-Body is free-form markdown.
+### prd.md body conventions (overview layer)
+
+The body is free-form markdown, but follow this section structure for consistency:
+
+1. **현재 상태** — 1-2 paragraphs describing where the product is today
+2. **Active Feature PRDs (진행 중)** — table listing feature PRDs with links to Notion + local mirror in `active-prds/`
+3. **Related Sprints (완료 / 이력)** — completed sprints and optional reflection links
+4. **Notion Catalogue** — pointer to `products/notion-prds.yaml` for the full PRD history
+5. **제품 경계** — what's in / out of scope for this product
+6. **편집 규칙** — reminds editors that feature-PRD bodies live in Notion + `active-prds/`, not here
+
+Products with phases (e.g. `ugc-platform`) add a Phase table inside §2 showing phase order + dependencies.
 
 ### events.yaml
 
