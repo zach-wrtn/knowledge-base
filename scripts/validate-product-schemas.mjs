@@ -20,11 +20,14 @@ function loadSchema(name) {
 const validatePrd = loadSchema("prd");
 const validateEvents = loadSchema("events");
 const validateNotionPrds = loadSchema("notion-prds");
+const validateActivePrd = loadSchema("active-prd");
+
+const RESERVED_DIRS = new Set(["active-prds"]);
 
 function listProductDirs() {
   if (!existsSync(productsDir)) return [];
   return readdirSync(productsDir, { withFileTypes: true })
-    .filter((e) => e.isDirectory())
+    .filter((e) => e.isDirectory() && !RESERVED_DIRS.has(e.name))
     .map((e) => join(productsDir, e.name));
 }
 
@@ -76,6 +79,32 @@ if (existsSync(notionPrdsPath)) {
   if (!validateNotionPrds(doc)) {
     console.error(`FAIL  ${notionPrdsPath}: ${JSON.stringify(validateNotionPrds.errors)}`);
     failed++;
+  }
+}
+
+// active-prds/*.md (optional synced mirror)
+const activePrdsDir = join(productsDir, "active-prds");
+if (existsSync(activePrdsDir)) {
+  for (const entry of readdirSync(activePrdsDir, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
+    if (entry.name === "README.md") continue;
+    const file = join(activePrdsDir, entry.name);
+    const fm = matter(readFileSync(file, "utf8")).data;
+    if (Object.keys(fm).length === 0) {
+      console.error(`FAIL  ${file}: no frontmatter`);
+      failed++;
+      continue;
+    }
+    if (!validateActivePrd(fm)) {
+      console.error(`FAIL  ${file}: ${JSON.stringify(validateActivePrd.errors)}`);
+      failed++;
+      continue;
+    }
+    const expectedBasename = fm.notion_id.replace(/-/g, "") + ".md";
+    if (entry.name !== expectedBasename) {
+      console.error(`FAIL  ${file}: filename must be "${expectedBasename}" to match notion_id "${fm.notion_id}"`);
+      failed++;
+    }
   }
 }
 
