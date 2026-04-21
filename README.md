@@ -49,14 +49,20 @@ Two axes: `learning/` (self-improving meta-knowledge) and `products/` (per-produ
 | Type | Directory | Schema | Filename |
 |------|-----------|--------|----------|
 | prd (overview) | `products/{product}/` | `schemas/products/prd.schema.json` | `prd.md` |
-| events | `products/{product}/` | `schemas/products/events.schema.json` | `events.yaml` |
+| events (catalog) | `products/{product}/events/` | `schemas/products/events.schema.json` | `catalog.yaml` |
+| events (rationale) | `products/{product}/events/` | — | `{app}-{feature}.md` |
+| events (index) | `products/{product}/events/` | — | `README.md` (optional) |
 | notion-prds (index) | `products/` | `schemas/products/notion-prds.schema.json` | `notion-prds.yaml` |
 | active-prd (feature body mirror) | `products/{product}/{slug}/` | `schemas/products/active-prd.schema.json` | `prd.md` |
 
 `{product}` ∈ `{ai-webtoon, free-tab, ugc-platform}`; `{slug}` is a kebab-case
-PRD identifier (e.g., `filter-diversification`, `phase-1-profile`). See
-`products/README.md` for authoring. `notion-prds.yaml` is a Notion-synced flat
-index (read-only; sourced via `zzem-kb:sync-prds-from-notion`).
+PRD identifier (e.g., `filter-diversification`, `phase-1-profile`). Event
+rationale filenames follow `{app}-{feature}.md` in kebab-case (e.g.,
+`meme-app-home.md`, `meme-app-swipe-feed.md`). See `products/README.md` for
+authoring. Legacy flat `products/{product}/events.yaml` is still accepted by
+the validator with a deprecation warning; scheduled for removal in KB Phase 3.
+`notion-prds.yaml` is a Notion-synced flat index (read-only; sourced via
+`zzem-kb:sync-prds-from-notion`).
 `products/{product}/{slug}/prd.md` files are full `상태 = 진행 중` PRD bodies
 mirrored from Notion (SSOT; sourced via `zzem-kb:sync-active-prds` — do NOT
 hand-edit, overwrite-on-sync policy).
