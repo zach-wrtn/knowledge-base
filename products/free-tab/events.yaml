@@ -1,8 +1,269 @@
 product: free-tab
-last_updated: "2026-04-19"
+owner: zach@wrtn.io
+last_updated: "2026-04-21"
 schema_version: 1
+
+# free-tab 프로덕트가 도입/수정/제거하는 이벤트 카탈로그.
+# 기존 이벤트의 재활용(reuse)은 이 목록에 포함하지 않음 —
+# 설계 rationale 은 event-design/{app}-{feature}.md 참조.
+#
+# 변경 유형은 notes 의 prefix 로 표기한다:
+#   [new]        — free-tab 프로덕트가 처음 도입
+#   [modified]   — 기존 이벤트의 params/loggers 확장 (optional 만)
+#   [deprecated] — free-tab 프로덕트가 제거하는 기존 이벤트
+#
+# (향후 events.schema.json 확장 시 별도 필드로 승격 예정)
+
 events:
-  - name: placeholder_event
-    trigger: "Remove when real events are added"
-    properties: {}
-    notes: "Stub to satisfy events schema minItems: 1. Replace in Phase 2.1+."
+  # ==================================================================
+  # NEW (7) — free-tab 이 새로 도입한 이벤트
+  # ==================================================================
+
+  - name: expose_free_confirm_sheet
+    trigger: "무료 사용 확인 바텀시트 mount (CTA 탭 + 미사용 시)"
+    properties:
+      service_detail: '"home" (리터럴)'
+      filter_id: "string — 대상 필터 ID"
+      funnel_id: "string? (optional) — swipe-feed click_free_swipefeed_cta_btn.imp_id 로부터 전달"
+      modal_type: '"bottom_sheet" (리터럴)'
+    notes: "[new] home | loggers: mixpanel | AC 2.2.3 | impl: free-confirm-bottom-sheet.tsx useEffect([])"
+
+  - name: click_free_confirm_btn
+    trigger: "confirm 바텀시트의 무료 사용하기 / 더 둘러볼게요 버튼 탭"
+    properties:
+      service_detail: '"home" (리터럴)'
+      filter_id: "string — 대상 필터 ID"
+      button_name: '"confirm" | "dismiss" — 무료 사용하기 vs 더 둘러볼게요'
+    notes: "[new] home | loggers: mixpanel, airbridge, firebase | AC 2.2.4/2.2.5 | impl: free-confirm-bottom-sheet.tsx handleConfirm/handleDismiss"
+
+  - name: expose_free_credit_sheet
+    trigger: "크레딧 전환 바텀시트 mount (무료 사용완료 후 CTA 탭 시)"
+    properties:
+      service_detail: '"home" (리터럴)'
+      filter_id: "string — 대상 필터 ID"
+      credit_amount: "number — 차감 예정 크레딧"
+      funnel_id: "string? (optional) — swipe-feed CTA 로부터"
+      modal_type: '"bottom_sheet" (리터럴)'
+    notes: "[new] home | loggers: mixpanel | AC 2.6.3 | impl: free-credit-bottom-sheet.tsx useEffect([])"
+
+  - name: click_free_credit_btn
+    trigger: "credit 바텀시트의 크레딧 사용하기 / 취소 버튼 탭"
+    properties:
+      service_detail: '"home" (리터럴)'
+      filter_id: "string — 대상 필터 ID"
+      credit_amount: "number — 차감 크레딧"
+      button_name: '"confirm" | "dismiss" — 크레딧 사용 vs 취소'
+    notes: "[new] home | loggers: mixpanel, airbridge, firebase | AC 2.6.4 유료 전환율 | impl: free-credit-bottom-sheet.tsx handleConfirm/handleDismiss"
+
+  - name: view_free_swipefeed_page
+    trigger: "무료 SwipeFeed 화면 진입 (mount 1회)"
+    properties:
+      service_detail: '"filter" (리터럴)'
+      filter_id: "string — 진입 시 첫 필터"
+      filter_title: "string — 필터명"
+      entry_point: '"grid_feed" | "recommend" | "deeplink" — 진입 경로 (BR-14/US-7 분기)'
+      total_filter_count_bucket: '"1-5" | "6-10" | "11-20" | "20+" — 카디널리티 방지 bucket'
+      has_used_free_today: "boolean — 무료 사용 여부"
+      funnel_id: "string? (optional) — home click_meme_filter.imp_id 로부터 전달"
+    notes: "[new] swipe-feed | loggers: mixpanel, airbridge, firebase | AC 2.2.1 | impl: swipe-feed.screen.tsx free mode useEffect([])"
+
+  - name: imp_free_swipefeed_cta_btn
+    trigger: "무료 SwipeFeed 하단 CTA 버튼 viewport 노출"
+    properties:
+      service_detail: '"filter" (리터럴)'
+      filter_id: "string — 현재 필터"
+      is_free: "boolean — 무료 CTA (ticket) vs 유료 CTA (coin)"
+      imp_id: "string — imp-click 연결 (ImpressionView 자동 생성)"
+    notes: "[new] swipe-feed | loggers: mixpanel | CTA CTR 측정 | impl: swipe-feed-free-footer.tsx ImpressionView wrap"
+
+  - name: click_free_swipefeed_cta_btn
+    trigger: "CTA 탭 → confirm 또는 credit 바텀시트 호출"
+    properties:
+      service_detail: '"filter" (리터럴)'
+      filter_id: "string — 현재 필터"
+      is_free: "boolean — 분기"
+      imp_id: "string — imp 매칭"
+    notes: "[new] swipe-feed | loggers: mixpanel | AC 2.2.3/2.6.3 | impl: swipe-feed-free-footer.tsx handleCta"
+
+  # ==================================================================
+  # MODIFIED (5) — 기존 이벤트에 optional 파라미터 추가 (non-breaking)
+  # ==================================================================
+
+  - name: view_home_page
+    trigger: "홈 화면 진입 / 포커스 (딥링크 / foreground 복귀 포함)"
+    properties:
+      service_detail: '"home" (리터럴, 기존)'
+      tab: '"recommend" | "free" (기존)'
+      entry_point: 'string? (추가, optional) — "tab_switch" | "deeplink" | "foreground" | null. AC 2.5.4 + 딥링크 구분'
+      has_free_red_dot: "boolean? (추가, optional) — AC 2.1.4/2.5.3 레드닷 노출 여부"
+    notes: "[modified] home | loggers: mixpanel, airbridge, firebase | non-breaking (optional 만 추가) | impl: home.screen.tsx trackViewHomePage"
+
+  - name: imp_home_banner
+    trigger: "홈 배너 viewport 노출 (무료탭 배너 포함)"
+    properties:
+      service_detail: '"home" (리터럴, 기존)'
+      type: "string (기존)"
+      banner_id: "string (기존)"
+      image_url: "string (기존)"
+      link: "string (기존)"
+      order: "number (기존)"
+      title: "string (기존)"
+      description: "string (기존)"
+      imp_id: "string (기존)"
+      banner_state: 'string? (추가, optional) — "purple" | "teal" | null. 무료탭 배너에 한해 전달 (PRD §3.3)'
+    notes: "[modified] home | loggers: mixpanel | non-breaking | impl: free-banner.tsx (ImpressionView wrap 필요)"
+
+  - name: imp_vertical_feed_filter
+    trigger: "세로 피드 필터 노출 (스냅 전환마다, 무료 모드 포함)"
+    properties:
+      service_detail: '"filter" (리터럴, 기존)'
+      filter_id: "string | null (기존)"
+      filter_title: "string | null (기존)"
+      feed_mode: 'string? (추가, optional) — "free" | "paid" | "recommend" | null. 피드 모드 분기 (US-3 AC 2.3.1)'
+    notes: "[modified] swipe-feed | loggers: mixpanel, airbridge, firebase | non-breaking | 현재 free mode 에서 guard 로 DISABLED → 재활성화 + feed_mode 추가"
+
+  - name: swipe_vertical_feed
+    trigger: "세로 스와이프 동작 (이전 필터 기준 기록, 무료 모드 포함)"
+    properties:
+      service_detail: '"filter" (리터럴, 기존)'
+      filter_id: "string | null (기존, 이전 필터)"
+      filter_title: "string | null (기존, 이전 필터명)"
+      feed_mode: 'string? (추가, optional) — "free" | "paid" | "recommend" | null'
+    notes: "[modified] swipe-feed | loggers: mixpanel, airbridge, firebase | non-breaking | AC 2.3.1 탐색 측정"
+
+  - name: click_vertical_feed_action_btn
+    trigger: "세로 피드 액션 버튼 탭 (audio/like/share/feedback/report/filter_detail/generate/regenerate)"
+    properties:
+      service_detail: '"filter" (리터럴, 기존)'
+      filter_id: "string | null (기존)"
+      filter_title: "string | null (기존)"
+      button_name: '"audio" | "like" | "share" | "feedback" | "report" | "filter_detail" | "generate" | "regenerate" (기존)'
+      feed_mode: 'string? (추가, optional) — "free" | "paid" | "recommend" | null'
+    notes: "[modified] swipe-feed | loggers: mixpanel | non-breaking | free mode call-site 에만 feed_mode 추가 필요"
+
+  # ==================================================================
+  # DEPRECATED (14) — free-tab 이 제거하는 기존 이벤트
+  # 제거 원칙: 1주 grace period 후 EventSpec 타입 + utils/free-tab-events.ts 삭제
+  # ==================================================================
+
+  - name: free_tab_view
+    trigger: "[DEPRECATED] 무료탭 진입 시 (camelCase params + sessionId 카디널리티 위반)"
+    properties:
+      filterCount: "number — DROP"
+      hasUsedFreeToday: "boolean — DROP"
+      experimentGroup: "string — DROP (global/cohort 이관)"
+      sessionId: "string — DROP (카디널리티)"
+    notes: "[deprecated] 2026-04-21 | replaces: view_home_page(tab=free) modified | remove after: 2026-04-28 | impl_site: free-tab-events.ts:5 (active in free-body.tsx)"
+
+  - name: free_tab_scroll
+    trigger: "[DEPRECATED] 무료탭 스크롤 (스크롤 이벤트 안티패턴, 배열 카디널리티)"
+    properties:
+      visibleFilterIds: "string[] — DROP (배열 카디널리티)"
+      scrollDepth: "number — DROP"
+      sessionId: "string — DROP"
+    notes: "[deprecated] 2026-04-21 | replaces: DROP (호출처 없음) | remove after: 즉시"
+
+  - name: free_tab_dwell
+    trigger: "[DEPRECATED] 무료탭 체류시간 (타임스탬프 카디널리티)"
+    properties:
+      dwellTimeMs: "number — DROP"
+      filtersVisibleCount: "number — DROP"
+      didEnterSwipefeed: "boolean — DROP"
+      sessionId: "string — DROP"
+    notes: "[deprecated] 2026-04-21 | replaces: screen_visit_duration (자동 추적) | remove after: 즉시"
+
+  - name: free_grid_tap
+    trigger: "[DEPRECATED] 그리드 아이템 탭 (click_meme_filter 와 중복 fire)"
+    properties:
+      filterId: "string — → filter_id (기존 존재)"
+      filterTitle: "string — → filter_title"
+      slotIndex: "number — → filter_order"
+      tap_position_row: "number — DROP (과도한 상세)"
+      tap_position_col: "number — DROP"
+      sessionId: "string — DROP"
+    notes: "[deprecated] 2026-04-21 | replaces: click_meme_filter(service_detail=home) | remove after: 2026-04-28 | impl_site: free-tab-events.ts:31"
+
+  - name: free_confirm_accept
+    trigger: "[DEPRECATED] confirm 바텀시트 accept"
+    properties:
+      filterId: "string — → filter_id"
+      sessionId: "string — DROP"
+    notes: "[deprecated] 2026-04-21 | replaces: click_free_confirm_btn(button_name=confirm) | remove after: 2026-04-28 | impl_site: free-tab-events.ts:96"
+
+  - name: free_confirm_dismiss
+    trigger: "[DEPRECATED] confirm 바텀시트 dismiss"
+    properties:
+      filterId: "string — → filter_id"
+      sessionId: "string — DROP"
+    notes: "[deprecated] 2026-04-21 | replaces: click_free_confirm_btn(button_name=dismiss) | remove after: 2026-04-28"
+
+  - name: free_credit_accept
+    trigger: "[DEPRECATED] credit 바텀시트 accept"
+    properties:
+      filterId: "string — → filter_id"
+      creditAmount: "number — → credit_amount"
+      sessionId: "string — DROP"
+    notes: "[deprecated] 2026-04-21 | replaces: click_free_credit_btn(button_name=confirm) | remove after: 2026-04-28"
+
+  - name: free_credit_dismiss
+    trigger: "[DEPRECATED] credit 바텀시트 dismiss"
+    properties:
+      filterId: "string — → filter_id"
+      sessionId: "string — DROP"
+    notes: "[deprecated] 2026-04-21 | replaces: click_free_credit_btn(button_name=dismiss) | remove after: 2026-04-28"
+
+  - name: free_generation_complete
+    trigger: "[DEPRECATED] 무료 생성 완료 (generate_done 과 중복, 호출처 없음)"
+    properties:
+      generatedFilterId: "string — → filter_id"
+      timeToReturnMs: "number — DROP (server-side 측정)"
+      sessionId: "string — DROP"
+    notes: "[deprecated] 2026-04-21 | replaces: generate_done(service_detail=filter) | remove after: 즉시"
+
+  - name: free_post_use_tap
+    trigger: "[DEPRECATED] 사용완료 후 다른 필터 탭 (호출처 없음)"
+    properties:
+      filterId: "string — → filter_id"
+      isSameAsGenerated: "boolean — DROP"
+      sessionId: "string — DROP"
+    notes: "[deprecated] 2026-04-21 | replaces: click_meme_filter (filter_id 비교로 간접 추적) | remove after: 즉시"
+
+  - name: free_swipe_enter
+    trigger: "[DEPRECATED] SwipeFeed 진입 (view_ prefix 위반, 호출처 없음)"
+    properties:
+      initialFilterId: "string — → filter_id"
+      totalFilterCount: "number — → total_filter_count_bucket"
+      hasUsedFreeToday: "boolean — → has_used_free_today"
+      sessionId: "string — DROP"
+    notes: "[deprecated] 2026-04-21 | replaces: view_free_swipefeed_page | remove after: 즉시"
+
+  - name: free_swipe_view
+    trigger: "[DEPRECATED] 스와이프 피드 필터 노출 (imp_ prefix 위반)"
+    properties:
+      filterId: "string — → filter_id"
+      filterTitle: "string — → filter_title"
+      slotIndex: "number — DROP"
+      viewIndex: "number — DROP"
+      viewDwellMs: "number — DROP"
+      sessionId: "string — DROP"
+    notes: "[deprecated] 2026-04-21 | replaces: imp_vertical_feed_filter(feed_mode=free) | remove after: 즉시"
+
+  - name: free_swipe_dwell
+    trigger: "[DEPRECATED] SwipeFeed 체류시간 (호출처 없음)"
+    properties:
+      dwellTimeMs: "number — DROP"
+      filtersViewedCount: "number — DROP"
+      filtersUniqueCount: "number — DROP"
+      didTapCta: "boolean — DROP"
+      sessionId: "string — DROP"
+    notes: "[deprecated] 2026-04-21 | replaces: screen_visit_duration | remove after: 즉시"
+
+  - name: free_cta_tap
+    trigger: "[DEPRECATED] CTA 탭 (click_ prefix 위반, imp_id 없음)"
+    properties:
+      filterId: "string — → filter_id"
+      filterTitle: "string — → filter_title"
+      isFree: "boolean — → is_free"
+      viewsBeforeCta: "number — DROP (session 분석 이관)"
+      sessionId: "string — DROP"
+    notes: "[deprecated] 2026-04-21 | replaces: click_free_swipefeed_cta_btn(imp_id 포함) | remove after: 2026-04-28 | impl_site: free-tab-events.ts:87 (active in swipe-feed-free-footer.tsx:422)"
