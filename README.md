@@ -48,16 +48,18 @@ Two axes: `learning/` (self-improving meta-knowledge) and `products/` (per-produ
 
 | Type | Directory | Schema | Filename |
 |------|-----------|--------|----------|
-| prd | `products/{product}/` | `schemas/products/prd.schema.json` | `prd.md` |
+| prd (overview) | `products/{product}/` | `schemas/products/prd.schema.json` | `prd.md` |
 | events | `products/{product}/` | `schemas/products/events.schema.json` | `events.yaml` |
 | notion-prds (index) | `products/` | `schemas/products/notion-prds.schema.json` | `notion-prds.yaml` |
-| active-prd (body mirror) | `products/active-prds/` | `schemas/products/active-prd.schema.json` | `{notion-id-no-dashes}.md` |
+| active-prd (feature body mirror) | `products/{product}/{slug}/` | `schemas/products/active-prd.schema.json` | `prd.md` |
 
-`{product}` ∈ `{ai-webtoon, free-tab, ugc-platform}`. See `products/README.md`
-for authoring. `notion-prds.yaml` is a Notion-synced flat index (read-only;
-sourced via `zzem-kb:sync-prds-from-notion`). `active-prds/*.md` are full
-`상태 = 진행 중` PRD bodies mirrored from Notion (SSOT; sourced via
-`zzem-kb:sync-active-prds` — do NOT hand-edit, overwrite-on-sync policy).
+`{product}` ∈ `{ai-webtoon, free-tab, ugc-platform}`; `{slug}` is a kebab-case
+PRD identifier (e.g., `filter-diversification`, `phase-1-profile`). See
+`products/README.md` for authoring. `notion-prds.yaml` is a Notion-synced flat
+index (read-only; sourced via `zzem-kb:sync-prds-from-notion`).
+`products/{product}/{slug}/prd.md` files are full `상태 = 진행 중` PRD bodies
+mirrored from Notion (SSOT; sourced via `zzem-kb:sync-active-prds` — do NOT
+hand-edit, overwrite-on-sync policy).
 
 ## Contributing
 

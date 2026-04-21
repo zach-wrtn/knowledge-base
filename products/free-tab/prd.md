@@ -17,7 +17,7 @@ schema_version: 1
 
 | Title | 최종수정 | Notion | Mirror |
 |---|---|---|---|
-| [Agent PRD] 무료탭 필터선택 다양화 | 2026-04-17 | [↗](https://www.notion.so/Agent-PRD-33e0159c6b598143bd62c4c136d72bd8) | [`33e0159c…`](../active-prds/33e0159c6b598143bd62c4c136d72bd8.md) |
+| [Agent PRD] 무료탭 필터선택 다양화 | 2026-04-17 | [↗](https://www.notion.so/Agent-PRD-33e0159c6b598143bd62c4c136d72bd8) | [`filter-diversification/`](./filter-diversification/prd.md) |
 
 - **요약**: 무료탭 필터를 하루 1개 → 10개로 확장, 테마별 자동 편성 + SwipeFeed 탐색 + 1일 1회 무료 생성 구조 전환
 - **KPI 기여**: 무료탭 DAU·재방문율(D1/D7) 상승 + 무료→유료 전환율 개선

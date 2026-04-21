@@ -4,6 +4,7 @@ title: "AI UGC Platform 2 — 피드 인터랙션 & 페이백"
 domain: ZZEM
 status: "진행 중"
 kb_product: ugc-platform
+slug: phase-2-feed-payback
 description: "세로 스와이프 피드에서의 모든 인터랙션(공개/비공개, CTA, 좋아요, 재생성)과 크레딧 페이백 시스템을 구축한다."
 kpi_contribution: "UGC 콘텐츠 재생성 수·좋아요 수 상승 및 크레딧 페이백을 통한 생성자 리텐션 개선"
 figma:

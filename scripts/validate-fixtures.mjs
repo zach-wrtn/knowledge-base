@@ -56,6 +56,7 @@ const cases = [
   { schema: "active-prd",  fixture: "valid-active-prd.md",                    expect: "valid",   loader: loadFrontmatter },
   { schema: "active-prd",  fixture: "invalid-active-prd-wrong-status.md",     expect: "invalid", loader: loadFrontmatter },
   { schema: "active-prd",  fixture: "invalid-active-prd-bad-notion-id.md",    expect: "invalid", loader: loadFrontmatter },
+  { schema: "active-prd",  fixture: "invalid-active-prd-missing-slug.md",     expect: "invalid", loader: loadFrontmatter },
 ];
 
 const validators = {};
