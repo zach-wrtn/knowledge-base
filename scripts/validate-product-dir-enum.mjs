@@ -12,6 +12,7 @@ function loadProductEnum() {
 }
 
 const allowedDirs = new Set(loadProductEnum());
+const RESERVED_DIRS = new Set(["active-prds"]);
 
 if (!existsSync(productsDir)) {
   console.log("(no products/ directory, skipping)");
@@ -21,7 +22,7 @@ if (!existsSync(productsDir)) {
 let failed = 0;
 
 for (const entry of readdirSync(productsDir, { withFileTypes: true })) {
-  if (entry.isDirectory()) {
+  if (entry.isDirectory() && !RESERVED_DIRS.has(entry.name)) {
     if (!allowedDirs.has(entry.name)) {
       console.error(
         `FAIL  products/${entry.name}: directory name not in product enum ` +

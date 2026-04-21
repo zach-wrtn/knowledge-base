@@ -20,6 +20,13 @@ Product directory names MUST match the `product` enum in
 PRD database. Do not hand-edit. Refresh via the `zzem-kb:sync-prds-from-notion`
 skill (requires Notion MCP). Schema: `schemas/products/notion-prds.schema.json`.
 
+`active-prds/` holds **full body mirrors** of PRDs whose Notion `상태` is
+`진행 중` (one `.md` file per page, filename = notion page id without dashes).
+Notion is SSOT; these files are overwritten on every `zzem-kb:sync-active-prds`
+run and deleted when the source PRD transitions out of `진행 중`. Do NOT edit
+locally — edits will be clobbered on next sync. Schema:
+`schemas/products/active-prd.schema.json`.
+
 ## Authoring workflow
 
 No write skill exists for axis-2 content (intentional — concurrent writes

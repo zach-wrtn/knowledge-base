@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zach-wrtn.github.io/knowledge-base/schemas/products/active-prd.schema.json",
+  "title": "Active PRD (frontmatter only; body = synced markdown from Notion)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "notion_id",
+    "title",
+    "status",
+    "url",
+    "last_edited_time",
+    "synced_at",
+    "schema_version"
+  ],
+  "properties": {
+    "notion_id":        { "type": "string", "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$" },
+    "title":            { "type": "string", "minLength": 1 },
+    "domain":           { "type": "string" },
+    "status":           { "const": "진행 중" },
+    "kb_product":       { "enum": ["ai-webtoon", "free-tab", "ugc-platform"] },
+    "description":      { "type": "string" },
+    "kpi_contribution": { "type": "string" },
+    "assignees":        { "type": "array", "items": { "type": "string" } },
+    "figma":            { "type": "array", "items": { "type": "string", "format": "uri" } },
+    "url":              { "type": "string", "format": "uri" },
+    "created_time":     { "type": "string", "format": "date-time" },
+    "last_edited_time": { "type": "string", "format": "date-time" },
+    "synced_at":        { "type": "string", "format": "date-time" },
+    "synced_by":        { "type": "string" },
+    "schema_version":   { "const": 1 }
+  }
+}

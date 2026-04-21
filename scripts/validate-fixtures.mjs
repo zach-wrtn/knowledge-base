@@ -9,6 +9,7 @@ const ROOT = new URL("..", import.meta.url).pathname;
 const SCHEMA_DIRS = {
   pattern: "learning", reflection: "learning", rubric: "learning",
   prd: "products",    events: "products",    "notion-prds": "products",
+  "active-prd": "products",
 };
 const schemaPath = (name) => {
   const dir = SCHEMA_DIRS[name];
@@ -52,6 +53,9 @@ const cases = [
   { schema: "notion-prds", fixture: "valid-notion-prds.yaml",                 expect: "valid",   loader: loadYaml },
   { schema: "notion-prds", fixture: "invalid-notion-prds-bad-db-id.yaml",     expect: "invalid", loader: loadYaml },
   { schema: "notion-prds", fixture: "invalid-notion-prds-missing-synced-at.yaml", expect: "invalid", loader: loadYaml },
+  { schema: "active-prd",  fixture: "valid-active-prd.md",                    expect: "valid",   loader: loadFrontmatter },
+  { schema: "active-prd",  fixture: "invalid-active-prd-wrong-status.md",     expect: "invalid", loader: loadFrontmatter },
+  { schema: "active-prd",  fixture: "invalid-active-prd-bad-notion-id.md",    expect: "invalid", loader: loadFrontmatter },
 ];
 
 const validators = {};
