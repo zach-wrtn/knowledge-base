@@ -12,26 +12,41 @@ Notion is the SSOT for PRD **content**; the KB overview is the SSOT for how feat
 ```
 products/
   ai-webtoon/
-    prd.md               (overview)
-    events.yaml          (product-level events)
-    service-v1-2/        (feature PRD mirror)
+    prd.md                       (overview)
+    events/
+      catalog.yaml               (product-level event catalog)
+    service-v1-2/                (feature PRD mirror)
       prd.md
   free-tab/
     prd.md
-    events.yaml
+    events/
+      catalog.yaml               (schema-validated)
+      README.md                  (design index)
+      meme-app-home.md           (rationale — home feature)
+      meme-app-swipe-feed.md     (rationale — swipe-feed feature)
     filter-diversification/
       prd.md
   ugc-platform/
     prd.md
-    events.yaml
+    events/
+      catalog.yaml
     phase-1-profile/
       prd.md
     phase-2-feed-payback/
       prd.md
     phase-3-social-notification/
       prd.md
-  notion-prds.yaml       # Notion-synced PRD metadata index (flat, read-only)
+  notion-prds.yaml               # Notion-synced PRD metadata index (flat, read-only)
 ```
+
+The `events/` sub-directory holds the product's event catalog and optional
+design rationale. `catalog.yaml` is required and schema-validated; additional
+markdown files are free-form. This sub-directory is exempt from the
+`products/{product}/{slug}/prd.md` requirement (well-known name).
+
+**Migration from legacy layout:** `products/{product}/events.yaml` is still
+accepted but emits a deprecation warning. Move it to
+`products/{product}/events/catalog.yaml` when convenient.
 
 Product directory names MUST match the `product` enum in
 `schemas/products/prd.schema.json` and `schemas/products/events.schema.json`.

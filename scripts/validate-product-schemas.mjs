@@ -53,12 +53,28 @@ for (const dir of listProductDirs()) {
     }
   }
 
-  // Product-level: events.yaml
-  const eventsPath = join(dir, "events.yaml");
-  if (!existsSync(eventsPath)) {
-    console.error(`FAIL  ${dir}: missing events.yaml`);
+  // Product-level: events catalog
+  //
+  // Location policy:
+  //   preferred: `products/{product}/events/catalog.yaml`
+  //   legacy:    `products/{product}/events.yaml` (accepted for backward-compat,
+  //              emits a deprecation warning so products can migrate)
+  const newEventsPath = join(dir, "events", "catalog.yaml");
+  const legacyEventsPath = join(dir, "events.yaml");
+  const eventsPath = existsSync(newEventsPath)
+    ? newEventsPath
+    : existsSync(legacyEventsPath)
+      ? legacyEventsPath
+      : null;
+  if (eventsPath === null) {
+    console.error(`FAIL  ${dir}: missing events catalog (expected events/catalog.yaml)`);
     failed++;
   } else {
+    if (eventsPath === legacyEventsPath) {
+      console.warn(
+        `WARN  ${legacyEventsPath}: legacy location — migrate to events/catalog.yaml`
+      );
+    }
     const doc = yaml.load(readFileSync(eventsPath, "utf8"));
     if (!validateEvents(doc)) {
       console.error(`FAIL  ${eventsPath}: ${JSON.stringify(validateEvents.errors)}`);
@@ -69,9 +85,13 @@ for (const dir of listProductDirs()) {
     }
   }
 
+  // Well-known subdirs that don't represent a feature PRD — skipped from prd.md enforcement
+  const WELL_KNOWN_SUBDIRS = new Set(["events"]);
+
   // Nested feature PRDs: products/{product}/{slug}/prd.md
   for (const sub of readdirSync(dir, { withFileTypes: true })) {
     if (!sub.isDirectory()) continue;
+    if (WELL_KNOWN_SUBDIRS.has(sub.name)) continue;
     const featureDir = join(dir, sub.name);
     const featurePrdPath = join(featureDir, "prd.md");
     if (!existsSync(featurePrdPath)) {

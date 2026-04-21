@@ -16,8 +16,8 @@ supersedes: home.md v1 (2026-03-19, 13 events)
 
 > 대상 코드: `apps/MemeApp/src/presentation/home/` ([GitHub](https://github.com/wrtn-tech/app-core-packages/tree/main/apps/MemeApp/src/presentation/home))
 > 관련 EventSpec: `apps/MemeApp/src/shared/loggers/event-spec/index.ts`
-> PRD: [./filter-diversification/prd.md](./filter-diversification/prd.md) (Notion 미러, 자동 동기화)
-> 이벤트 카탈로그: [./events.yaml](./events.yaml) (스키마 검증 대상)
+> PRD: [../filter-diversification/prd.md](../filter-diversification/prd.md) (Notion 미러, 자동 동기화)
+> 이벤트 카탈로그: [./catalog.yaml](./catalog.yaml) (스키마 검증 대상)
 > v1 설계서와 병합 — 기존 13개 이벤트는 하단 §5 "reuse" 로 이관, 본 문서는 **브랜치 델타 (`main...HEAD`)** 로 발생한 free-tab 변경분을 다룬다.
 
 ---

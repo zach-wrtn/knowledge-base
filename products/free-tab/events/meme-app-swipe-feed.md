@@ -16,9 +16,9 @@ supersedes: swipe-feed.md v1 (2026-03-19, 11 events)
 
 > 대상 코드: `apps/MemeApp/src/presentation/swipe-feed/` ([GitHub](https://github.com/wrtn-tech/app-core-packages/tree/main/apps/MemeApp/src/presentation/swipe-feed))
 > 관련 EventSpec: `apps/MemeApp/src/shared/loggers/event-spec/index.ts`
-> PRD: [./filter-diversification/prd.md](./filter-diversification/prd.md) (Notion 미러, 자동 동기화)
-> 이벤트 카탈로그: [./events.yaml](./events.yaml)
-> 관련 피쳐: [./MemeApp-home.md](./MemeApp-home.md) — 무료 생성 플로우는 home 과 swipe-feed 에 걸쳐 있음
+> PRD: [../filter-diversification/prd.md](../filter-diversification/prd.md) (Notion 미러, 자동 동기화)
+> 이벤트 카탈로그: [./catalog.yaml](./catalog.yaml)
+> 관련 피쳐: [./meme-app-home.md](./meme-app-home.md) — 무료 생성 플로우는 home 과 swipe-feed 에 걸쳐 있음
 > v1 설계서와 병합 — v1 의 11개 이벤트는 §5 "reuse" 로 이관. 본 문서는 브랜치 델타 (`main...HEAD`) 로 발생한 free 모드 변경분을 다룬다.
 
 ---
