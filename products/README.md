@@ -1,9 +1,9 @@
 # products/ (Axis 2: Product Specs)
 
-Per-product artifacts consumed by sprints. Two layers:
+Per-product artifacts consumed by sprints. Two layers, **nested per product**:
 
 - **Overview layer** — `products/{product}/prd.md` is the **product's current-state overview** (summary, scope, boundaries) plus an index table of active feature PRDs. Hand-authored. Manually maintained.
-- **Mirror layer** — `products/active-prds/{notion-id}.md` are **full feature-PRD bodies** mirrored from Notion's `상태 = 진행 중` pages. Auto-synced; never hand-edited.
+- **Mirror layer** — `products/{product}/{slug}/prd.md` is a **full feature-PRD body** mirrored from Notion's `상태 = 진행 중` pages. Auto-synced via `zzem-kb:sync-active-prds`; never hand-edited. Multiple feature PRDs per product supported (e.g., `ugc-platform` has 3 phases).
 
 Notion is the SSOT for PRD **content**; the KB overview is the SSOT for how feature PRDs **relate** to a product and to each other (phases, dependencies, sprint links).
 
@@ -11,10 +11,26 @@ Notion is the SSOT for PRD **content**; the KB overview is the SSOT for how feat
 
 ```
 products/
-  ai-webtoon/      prd.md  events.yaml
-  free-tab/        prd.md  events.yaml
-  ugc-platform/    prd.md  events.yaml
-  notion-prds.yaml    # Notion-synced PRD index (flat, read-only)
+  ai-webtoon/
+    prd.md               (overview)
+    events.yaml          (product-level events)
+    service-v1-2/        (feature PRD mirror)
+      prd.md
+  free-tab/
+    prd.md
+    events.yaml
+    filter-diversification/
+      prd.md
+  ugc-platform/
+    prd.md
+    events.yaml
+    phase-1-profile/
+      prd.md
+    phase-2-feed-payback/
+      prd.md
+    phase-3-social-notification/
+      prd.md
+  notion-prds.yaml       # Notion-synced PRD metadata index (flat, read-only)
 ```
 
 Product directory names MUST match the `product` enum in
@@ -24,11 +40,12 @@ Product directory names MUST match the `product` enum in
 PRD database. Do not hand-edit. Refresh via the `zzem-kb:sync-prds-from-notion`
 skill (requires Notion MCP). Schema: `schemas/products/notion-prds.schema.json`.
 
-`active-prds/` holds **full body mirrors** of PRDs whose Notion `상태` is
-`진행 중` (one `.md` file per page, filename = notion page id without dashes).
+`products/{product}/{slug}/prd.md` holds **full body mirrors** of PRDs whose
+Notion `상태` is `진행 중`. Each slug directory corresponds to exactly one
+Notion page; its `prd.md` frontmatter's `notion_id` ties back to the source.
 Notion is SSOT; these files are overwritten on every `zzem-kb:sync-active-prds`
-run and deleted when the source PRD transitions out of `진행 중`. Do NOT edit
-locally — edits will be clobbered on next sync. Schema:
+run and the slug directory is deleted when the source PRD transitions out of
+`진행 중`. Do NOT edit locally — edits will be clobbered on next sync. Schema:
 `schemas/products/active-prd.schema.json`.
 
 ## Authoring workflow

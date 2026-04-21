@@ -4,6 +4,7 @@ title: "AI UGC Platform 3 — 소셜 & 알림"
 domain: ZZEM
 status: "진행 중"
 kb_product: ugc-platform
+slug: phase-3-social-notification
 description: "유저 간 소셜 관계(팔로우, 차단, 신고)와 알림 시스템(알림센터, 푸시, 설정)을 구축한다."
 kpi_contribution: "UGC 팔로우 수·알림 수신율 상승 및 소셜 리텐션 개선"
 figma:

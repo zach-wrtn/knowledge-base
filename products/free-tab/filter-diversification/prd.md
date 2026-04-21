@@ -4,6 +4,7 @@ title: "[Agent PRD] 무료탭 필터선택 다양화"
 domain: ZZEM
 status: "진행 중"
 kb_product: free-tab
+slug: filter-diversification
 description: "무료탭 필터를 하루 1개→10개로 확장하고, 테마별 자동 편성·SwipeFeed 탐색·1일 1회 무료 생성 구조로 전환하여 탐색 동기와 재방문율을 높인다."
 kpi_contribution: "무료탭 DAU·재방문율(D1/D7) 상승 및 무료→유료 전환율 개선"
 figma:

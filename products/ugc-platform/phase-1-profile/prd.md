@@ -4,6 +4,7 @@ title: "AI UGC Platform 1 — 프로필 & 네비게이션"
 domain: ZZEM
 status: "진행 중"
 kb_product: ugc-platform
+slug: phase-1-profile
 description: "앱의 네비게이션 골격(하단 탭 바 3탭)과 프로필 시스템(MY 3탭, 프로필 편집, 타 유저 프로필, 설정)을 구축한다."
 kpi_contribution: "UGC 플랫폼 DAU 및 프로필 방문율·팔로우 전환율 상승"
 figma:

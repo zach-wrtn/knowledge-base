@@ -21,9 +21,9 @@ schema_version: 1
 
 | Phase | Title | 최종수정 | Dep | Notion | Mirror |
 |:-:|---|---|---|---|---|
-| **1** | AI UGC Platform 1 — 프로필 & 네비게이션 | 2026-04-09 | 없음 (선행) | [↗](https://www.notion.so/AI-UGC-Platform-1-33b0159c6b5981249f14cbb4ac053ee5) | [`33b0…ac053ee5`](../active-prds/33b0159c6b5981249f14cbb4ac053ee5.md) |
-| **2** | AI UGC Platform 2 — 피드 인터랙션 & 페이백 | 2026-04-09 | Phase 1 완료 후 | [↗](https://www.notion.so/AI-UGC-Platform-2-33b0159c6b5981c481b5f75110a04872) | [`33b0…f75110a04872`](../active-prds/33b0159c6b5981c481b5f75110a04872.md) |
-| **3** | AI UGC Platform 3 — 소셜 & 알림 | 2026-04-09 | Phase 1 완료 후 (Phase 2와 병렬 가능) | [↗](https://www.notion.so/AI-UGC-Platform-3-33b0159c6b59819598ede2ef56215d85) | [`33b0…e2ef56215d85`](../active-prds/33b0159c6b59819598ede2ef56215d85.md) |
+| **1** | AI UGC Platform 1 — 프로필 & 네비게이션 | 2026-04-09 | 없음 (선행) | [↗](https://www.notion.so/AI-UGC-Platform-1-33b0159c6b5981249f14cbb4ac053ee5) | [`phase-1-profile/`](./phase-1-profile/prd.md) |
+| **2** | AI UGC Platform 2 — 피드 인터랙션 & 페이백 | 2026-04-09 | Phase 1 완료 후 | [↗](https://www.notion.so/AI-UGC-Platform-2-33b0159c6b5981c481b5f75110a04872) | [`phase-2-feed-payback/`](./phase-2-feed-payback/prd.md) |
+| **3** | AI UGC Platform 3 — 소셜 & 알림 | 2026-04-09 | Phase 1 완료 후 (Phase 2와 병렬 가능) | [↗](https://www.notion.so/AI-UGC-Platform-3-33b0159c6b59819598ede2ef56215d85) | [`phase-3-social-notification/`](./phase-3-social-notification/prd.md) |
 
 ### Phase 1 — 프로필 & 네비게이션
 - **범위**: 앱 골격(3탭 탭바), MY 3탭, 프로필 편집, 타유저 프로필, 설정 화면

@@ -1,12 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://zach-wrtn.github.io/knowledge-base/schemas/products/active-prd.schema.json",
-  "title": "Active PRD (frontmatter only; body = synced markdown from Notion)",
+  "title": "Active PRD (frontmatter only; body = synced markdown from Notion). Path convention: products/{kb_product}/{slug}/prd.md",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "notion_id",
     "title",
+    "kb_product",
+    "slug",
     "status",
     "url",
     "last_edited_time",
@@ -19,6 +21,7 @@
     "domain":           { "type": "string" },
     "status":           { "const": "진행 중" },
     "kb_product":       { "enum": ["ai-webtoon", "free-tab", "ugc-platform"] },
+    "slug":             { "type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 64 },
     "description":      { "type": "string" },
     "kpi_contribution": { "type": "string" },
     "assignees":        { "type": "array", "items": { "type": "string" } },

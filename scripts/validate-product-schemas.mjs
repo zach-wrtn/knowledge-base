@@ -22,12 +22,10 @@ const validateEvents = loadSchema("events");
 const validateNotionPrds = loadSchema("notion-prds");
 const validateActivePrd = loadSchema("active-prd");
 
-const RESERVED_DIRS = new Set(["active-prds"]);
-
 function listProductDirs() {
   if (!existsSync(productsDir)) return [];
   return readdirSync(productsDir, { withFileTypes: true })
-    .filter((e) => e.isDirectory() && !RESERVED_DIRS.has(e.name))
+    .filter((e) => e.isDirectory())
     .map((e) => join(productsDir, e.name));
 }
 
@@ -36,7 +34,7 @@ let failed = 0;
 for (const dir of listProductDirs()) {
   const product = basename(dir);
 
-  // prd.md
+  // Overview: prd.md
   const prdPath = join(dir, "prd.md");
   if (!existsSync(prdPath)) {
     console.error(`FAIL  ${dir}: missing prd.md`);
@@ -55,7 +53,7 @@ for (const dir of listProductDirs()) {
     }
   }
 
-  // events.yaml
+  // Product-level: events.yaml
   const eventsPath = join(dir, "events.yaml");
   if (!existsSync(eventsPath)) {
     console.error(`FAIL  ${dir}: missing events.yaml`);
@@ -70,6 +68,37 @@ for (const dir of listProductDirs()) {
       failed++;
     }
   }
+
+  // Nested feature PRDs: products/{product}/{slug}/prd.md
+  for (const sub of readdirSync(dir, { withFileTypes: true })) {
+    if (!sub.isDirectory()) continue;
+    const featureDir = join(dir, sub.name);
+    const featurePrdPath = join(featureDir, "prd.md");
+    if (!existsSync(featurePrdPath)) {
+      console.error(`FAIL  ${featureDir}: missing prd.md (every sub-dir under a product must contain prd.md)`);
+      failed++;
+      continue;
+    }
+    const fm = matter(readFileSync(featurePrdPath, "utf8")).data;
+    if (Object.keys(fm).length === 0) {
+      console.error(`FAIL  ${featurePrdPath}: no frontmatter`);
+      failed++;
+      continue;
+    }
+    if (!validateActivePrd(fm)) {
+      console.error(`FAIL  ${featurePrdPath}: ${JSON.stringify(validateActivePrd.errors)}`);
+      failed++;
+      continue;
+    }
+    if (fm.kb_product !== product) {
+      console.error(`FAIL  ${featurePrdPath}: kb_product "${fm.kb_product}" does not match parent directory "${product}"`);
+      failed++;
+    }
+    if (fm.slug !== sub.name) {
+      console.error(`FAIL  ${featurePrdPath}: slug "${fm.slug}" does not match containing directory "${sub.name}"`);
+      failed++;
+    }
+  }
 }
 
 // notion-prds.yaml (optional top-level index)
@@ -79,32 +108,6 @@ if (existsSync(notionPrdsPath)) {
   if (!validateNotionPrds(doc)) {
     console.error(`FAIL  ${notionPrdsPath}: ${JSON.stringify(validateNotionPrds.errors)}`);
     failed++;
-  }
-}
-
-// active-prds/*.md (optional synced mirror)
-const activePrdsDir = join(productsDir, "active-prds");
-if (existsSync(activePrdsDir)) {
-  for (const entry of readdirSync(activePrdsDir, { withFileTypes: true })) {
-    if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
-    if (entry.name === "README.md") continue;
-    const file = join(activePrdsDir, entry.name);
-    const fm = matter(readFileSync(file, "utf8")).data;
-    if (Object.keys(fm).length === 0) {
-      console.error(`FAIL  ${file}: no frontmatter`);
-      failed++;
-      continue;
-    }
-    if (!validateActivePrd(fm)) {
-      console.error(`FAIL  ${file}: ${JSON.stringify(validateActivePrd.errors)}`);
-      failed++;
-      continue;
-    }
-    const expectedBasename = fm.notion_id.replace(/-/g, "") + ".md";
-    if (entry.name !== expectedBasename) {
-      console.error(`FAIL  ${file}: filename must be "${expectedBasename}" to match notion_id "${fm.notion_id}"`);
-      failed++;
-    }
   }
 }
 

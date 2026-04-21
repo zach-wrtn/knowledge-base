@@ -1,21 +1,22 @@
 ---
 name: zzem-kb:sync-active-prds
-description: Extract body content of Notion PRDs with `상태 = 진행 중` and mirror them into `products/active-prds/{notion-id}.md`. Notion is SSOT; the KB files are derived, read-only mirrors overwritten on every sync. Use to refresh PRD content before Phase 2 Spec, ad-hoc review, or after a material Notion change. Requires Notion MCP.
+description: Extract body content of Notion PRDs with `상태 = 진행 중` and mirror them into `products/{kb_product}/{slug}/prd.md`. Notion is SSOT; the KB files are derived, read-only mirrors overwritten on every sync. Use to refresh PRD content before Phase 2 Spec, ad-hoc review, or after a material Notion change. Requires Notion MCP.
 ---
 
 # zzem-kb:sync-active-prds
 
-Pulls the full **body** of every PRD whose Notion `상태` is `진행 중` into `products/active-prds/{notion-id}.md`. Complements `zzem-kb:sync-prds-from-notion` (which syncs only the flat metadata catalogue). Notion is the Single Source of Truth; KB files are an overwrite-on-success mirror — do not hand-edit.
+Pulls the full **body** of every PRD whose Notion `상태` is `진행 중` into `products/{kb_product}/{slug}/prd.md`. Complements `zzem-kb:sync-prds-from-notion` (which syncs only the flat metadata catalogue). Notion is the Single Source of Truth; KB files are an overwrite-on-success mirror — do not hand-edit.
 
 ## Model
 
 - **Source**: Notion database (default id `22c0159c6b598017903ff16d077e87dd`), pages where `상태 = 진행 중`.
-- **Destination**: `products/active-prds/{notion-page-id-without-dashes}.md`. One file per active PRD.
+- **Destination**: `products/{kb_product}/{slug}/prd.md`. One directory per feature PRD, nested inside its product's overview directory. Both `kb_product` and `slug` are required per page.
 - **Direction**: one-way, Notion → KB. Never write back.
 - **Conflict policy**: destination is a **managed mirror**. On each sync:
   1. Fetch the current set of `진행 중` PRDs from Notion.
-  2. For each PRD: write (or overwrite) its file.
-  3. Delete any existing `products/active-prds/*.md` file whose filename does NOT appear in the current fetch — those PRDs have transitioned out of `진행 중` and no longer belong in this directory.
+  2. For each PRD: write (or overwrite) the nested `prd.md` file.
+  3. Delete any `products/{product}/{slug}/prd.md` whose (kb_product, slug) pair is NOT in the current fetch — that PRD has transitioned out of `진행 중`. Also remove the (now empty) slug directory.
+  - The product overview file `products/{product}/prd.md` and `products/{product}/events.yaml` are never touched by this skill.
 - **SSOT enforcement**: every generated file begins with a `> DO NOT EDIT` banner. The `notion_id` frontmatter field ties the file back to the source; editing locally will be clobbered on the next sync.
 
 ## Inputs
@@ -24,7 +25,7 @@ Pulls the full **body** of every PRD whose Notion `상태` is `진행 중` into 
 - `domain_filter` — array of Notion `도메인` values to include (optional; default: all domains). Example: `["ZZEM"]` excludes AI Native / Speaking / 여성향 크랙 entries.
 - `include_ids` — explicit allow-list of Notion page ids (optional; if set, other filters are ignored and only these pages are synced). Use for curated subsets.
 - `exclude_ids` — deny-list of Notion page ids (optional). Use to skip overview/index pages.
-- `kb_product_map` — optional `{notion_id: kb_product}` object that adds a `kb_product` frontmatter field on the output file when the id is present. Callers maintain this mapping externally (no auto-classification).
+- `prd_map` — **required** mapping from Notion page id → `{kb_product, slug}`. Shape: `{<notion-id>: {kb_product: "ai-webtoon"|"free-tab"|"ugc-platform", slug: "<kebab-case>"}}`. A PRD without a mapping entry is NOT synced (abort or skip-with-warning per caller preference). There is no auto-classification; callers must curate this mapping.
 
 ## Preconditions
 
@@ -81,7 +82,8 @@ Pulls the full **body** of every PRD whose Notion `상태` is `진행 중` into 
    title: {properties.이름.title[*].plain_text | "(untitled)"}
    domain: {properties.도메인.select.name | omit if null}
    status: "진행 중"
-   kb_product: {kb_product_map[id] | omit if unset}
+   kb_product: {prd_map[id].kb_product}   # required
+   slug: {prd_map[id].slug}               # required; must equal containing directory name
    description: {concat of properties.설명.rich_text | omit if empty}
    kpi_contribution: {concat of properties["KPI 기여 방식"].rich_text | omit if empty}
    assignees: [{people names}]   # omit if empty
@@ -102,24 +104,27 @@ Pulls the full **body** of every PRD whose Notion `상태` is `진행 중` into 
    {transformed body markdown}
    ```
 
-6. **Delete stale files**
-   List `products/active-prds/*.md`. Any file whose basename (without `.md`) does NOT match a notion_id from step 2's result set is stale (PRD has transitioned out of `진행 중` — or been deleted from Notion). Delete those files.
-   Special case: `products/active-prds/README.md` (if present) is never synced and never deleted.
+6. **Delete stale mirrors**
+   Walk `products/{product}/*/prd.md` for each product in the enum. For each such file read its frontmatter `notion_id`. If that id is NOT in the current fetch's result set (step 2), delete the file AND its containing slug directory. Skip the product overview (`products/{product}/prd.md`) and `products/{product}/events.yaml` — those are never touched.
 
 7. **Validate**
    Bash: `cd "$ZZEM_KB_PATH" && npm run validate:products`
    If validation fails:
    - Frontmatter schema mismatch → inspect error, fix step 5 mapping, re-run.
+   - `slug` ↔ directory name mismatch → fix `prd_map` or directory creation logic.
    - Do NOT commit malformed content.
 
 8. **Commit + rebase-retry push**
    Bash:
    ```
    cd "$ZZEM_KB_PATH"
-   git add products/active-prds/
-   # Include deletions explicitly in case some files were removed:
-   git add -A products/active-prds/
-   NCHANGED=$(git diff --cached --name-only products/active-prds/ | wc -l | tr -d ' ')
+   # Stage nested PRDs across all product dirs (adds + deletions):
+   for product in ai-webtoon free-tab ugc-platform; do
+     for entry in "products/$product"/*/; do
+       [ -d "$entry" ] && git add -A "$entry"
+     done
+   done
+   NCHANGED=$(git diff --cached --name-only | wc -l | tr -d ' ')
    if [ "$NCHANGED" = "0" ]; then echo "no changes"; exit 0; fi
    git commit -m "sync(notion): active PRDs ({N} entries)"
    for i in 1 2 3; do

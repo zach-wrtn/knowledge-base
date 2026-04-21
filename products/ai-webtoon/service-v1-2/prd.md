@@ -4,6 +4,7 @@ title: "[Agent PRD] AI 웹툰 서비스 v1.2"
 domain: ZZEM
 status: "진행 중"
 kb_product: ai-webtoon
+slug: service-v1-2
 description: "사진으로 1화를 만들고 자동/직접 이어가기로 연재를 형성해 크레딧 재소비를 유도한다. v1.2: x-prd 표준 준수 + 피드백 전면 반영 + 2026-04-14 최신 코드 확인 반영"
 kpi_contribution: "웹툰 생성 비중 10% 이상, 리텐션 플래토 형성, 크레딧 재구매 발생 여부"
 figma:
