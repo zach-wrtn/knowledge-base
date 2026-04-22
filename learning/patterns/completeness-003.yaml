@@ -5,8 +5,8 @@ severity: major
 source_sprint: free-tab-diversification
 source_group: group-003
 discovered_at: '2026-04-14T00:00:00+09:00'
-frequency: 1
-last_seen: free-tab-diversification
+frequency: 2
+last_seen: ugc-platform-001
 description: |
   `route.types.ts`에 새로운 navigation param이 optional로 추가되면, 타입 정의만
   존재하고 실제 `navigation.navigate` 호출부에서 전달이 누락되어 수신 측 컴포넌트가

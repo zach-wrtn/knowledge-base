@@ -1,0 +1,46 @@
+id: completeness-006
+title: Discriminated union / parent-dependent react-query 가 `enabled` gate 없이 unconditional fire
+category: completeness
+severity: major
+source_sprint: ugc-platform-001
+source_group: group-003
+discovered_at: '2026-04-22T17:30:00+09:00'
+frequency: 1
+last_seen: ugc-platform-001
+description: |
+  Discriminated union route param 으로 variant 별 queryFn 을 선택하거나,
+  parent query 결과에 의존하는 child query 를 구성할 때, 각 query 에
+  `enabled` option 이 누락되면 모든 variant / pre-resolution 상태에서
+  query 가 unconditional 하게 fire 된다. 결과: 불필요한 네트워크 요청,
+  empty targetId 로 400 응답, 404 시점에도 병렬 요청, 비효율적 캐시
+  warming.
+detection: |
+  - React-query 호출부에서 `enabled:` option 존재 확인
+  - Discriminated union params 의 경우 variant 별 `{ enabled: isVariantA }` 가드
+  - Parent-dependent query 는 `enabled: !!parentData` 가드
+  - Network tab 에서 "경로 분기 전" fire 되는 request 확인
+prevention: |
+  - Discriminated union params 도입 시 Contract §Done Criteria 에 "variant
+    별 queryFn 은 `enabled` option 으로 gate" 명시
+  - Parent-dependent query 는 최초 구현부터 `enabled: !!parent` 명시 (기본값 생략 금지)
+  - Hooks-rule 준수: hook 은 unconditional 호출하되 `enabled` option 으로
+    내부 fire 제어
+contract_clause: |
+  Discriminated union params / parent-dependent query 는 반드시 `enabled`
+  option 으로 fire 제어한다. Hook 의 unconditional 호출로 hooks-rule 을
+  준수하되, 쿼리 실행 여부는 `enabled` 로 결정한다. 데이터가 도달하지
+  않은 경로 / 비활성 variant 는 fire 되지 않는다.
+example:
+  bad: |
+    // swipe-feed.screen.tsx
+    const legacyFeed = useGetFeedSwipeUseCase(targetId, type);
+    const profileFeed = useGetProfileSwipeFeedUseCase(source ?? FALLBACK);
+    // ↑ 두 hook 모두 unconditional fire — legacy variant 에서 /me/contents 호출,
+    //   profile variant 에서 empty targetId 로 /meme/feeds/swipe 호출
+  good: |
+    // swipe-feed.screen.tsx
+    const isProfile = "source" in params;
+    const legacyFeed = useGetFeedSwipeUseCase(targetId, type, { enabled: !isProfile });
+    const profileFeed = useGetProfileSwipeFeedUseCase(source ?? FALLBACK, { enabled: isProfile });
+    // ↑ variant 매칭 시만 fire
+schema_version: 1

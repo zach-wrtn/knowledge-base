@@ -1,0 +1,32 @@
+id: completeness-005
+title: Nx 신규 e2e-spec.ts 가 testMatch 미매치로 실제 실행 안 됨
+category: completeness
+severity: major
+source_sprint: ugc-platform-001
+source_group: group-001
+discovered_at: '2026-04-22T17:30:00+09:00'
+frequency: 1
+last_seen: ugc-platform-001
+description: |
+  Nx monorepo 의 default jest 설정은 `@nx/jest/preset` testMatch
+  (`**/?(*.)+(spec|test).[jt]s?(x)`) 를 사용하며 `.e2e-spec.ts` 파일명은
+  e2e 접두 토큰으로 배제된다. 신규 e2e 테스트가 별도 `test-e2e` target +
+  `jest-e2e.json` 에 연결되지 않으면 파일은 존재하나 실제 실행 0 — Sprint
+  Lead / Generator 가 "통과" 로 착시할 수 있다.
+detection: |
+  - `nx test {project} --listTests` 출력에 신규 e2e-spec 파일 포함 여부
+  - `project.json` 의 `test-e2e` target 존재 + config 가 `jest-e2e.json` 가리키는지
+  - `jest-e2e.json` 의 `moduleNameMapper` 가 `^src/(.*)$` 등 path alias 포함 여부
+  - 실행 시도: `nx run {project}:test-e2e --listTests` 로 discovery 확인
+prevention: |
+  - 신규 `.e2e-spec.ts` 추가 시 동시에 (a) project.json 에 test-e2e target
+    (b) jest-e2e.json moduleNameMapper + testMatch 를 검증
+  - Sprint Contract V-method 에 "`nx test --listTests | grep e2e-spec` 로
+    discovery 확인" 명시
+  - Evaluator 는 파일 존재가 아닌 **실행 output** (passed/failed count) 을 증거로 인정
+contract_clause: |
+  신규 e2e-spec.ts 추가 시 nx project.json 의 test-e2e target +
+  jest-e2e.json moduleNameMapper 의 존재를 검증한다. Evaluator 는 "파일
+  존재" 가 아닌 "실행된 test 수" 를 증거로 요구한다 (`nx test --listTests`
+  또는 실행 output 에서 신규 spec 발견).
+schema_version: 1

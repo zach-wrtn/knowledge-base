@@ -1,0 +1,58 @@
+id: completeness-007
+title: Navigate payload 가 parent context 의존 — prop threading 없이 조립 시도
+category: completeness
+severity: major
+source_sprint: ugc-platform-001
+source_group: group-003
+discovered_at: '2026-04-22T17:30:00+09:00'
+frequency: 1
+last_seen: ugc-platform-001
+description: |
+  자식 컴포넌트의 onPress / navigate callsite 가 parent context (현재 탭,
+  선택된 아이템, 현재 모드 등) 에 의존하는 payload 를 조립해야 할 때,
+  해당 state 가 prop drilling 으로 자식까지 흘러 내려오지 않으면 자식이
+  추정 / hardcoding / 생략 중 하나를 선택하게 된다. 결과: 잘못된 payload
+  전달, 엣지 케이스 (liked 탭 진입 금지 등) 조건 누락, contract violation.
+detection: |
+  - Contract 의 navigate payload 가 parent state (탭, 모드) 를 참조하는지 먼저 확인
+  - 해당 state 가 callsite 컴포넌트의 props / context 에 존재하는지 역추적
+  - "자식이 parent state 를 추정/기본값으로 대체" 패턴 탐지
+prevention: |
+  - Sprint Lead Planner (Contract drafting) 단계에서 navigate payload 가
+    의존하는 parent state 를 Ground Rule 에 명시
+  - Done Criterion 에 "prop X 를 parent → child 로 threading" 명시
+  - Evaluator contract review 에서 Prop flow 를 수동 trace (parent state →
+    props chain → callsite)
+contract_clause: |
+  Navigate payload 가 parent context 에 의존하는 경우, 해당 context state
+  의 prop threading 경로를 Done Criterion 에 명시한다. 자식 컴포넌트가
+  parent state 를 추정 / 기본값 / hardcoding 으로 대체하는 것은 contract
+  violation 으로 간주한다.
+example:
+  bad: |
+    // profile-content-grid.tsx — tab 모름
+    export const ProfileContentGrid = ({ items, onEndReached }) => { ... }
+
+    // profile-content-item.tsx — tab 모름
+    const onPress = () => navigation.navigate('SwipeFeed', {
+      source: { kind: 'me', visibility: 'public' }  // ← 하드코딩
+    });
+  good: |
+    // profile.screen.tsx — parent context 소유
+    <ProfileContentGrid tab={currentTab} items={items} onEndReached={...} />
+
+    // profile-content-grid.tsx — tab prop 받음
+    export const ProfileContentGrid = ({ tab, items, onEndReached }) => {
+      return items.map(item =>
+        <ProfileContentItem key={item.id} tab={tab} data={item} />
+      );
+    }
+
+    // profile-content-item.tsx — tab prop 으로 payload 조립
+    const onPress = () => {
+      if (tab === 'liked') return;  // Ground Rule: liked 탭 진입 금지
+      navigation.navigate('SwipeFeed', {
+        source: { kind: 'me', visibility: tab }
+      });
+    };
+schema_version: 1
