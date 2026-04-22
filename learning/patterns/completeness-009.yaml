@@ -1,0 +1,56 @@
+id: completeness-009
+title: Dead hook / dead method / dead factory — 신규 hook 생성되나 callsite 0
+category: completeness
+severity: major
+source_sprint: ugc-platform-002
+source_group: group-001
+discovered_at: '2026-04-23T00:00:00+09:00'
+frequency: 2
+last_seen: ugc-platform-002
+description: |
+  Contract 가 "DTO 필드 추가" 또는 "helper/factory 신설" 을 요구할 때, 구현자가 API
+  surface 만 만들고 실제 호출 경로 (behavior) 를 연결하지 않음. 결과: hook/method/
+  factory 가 export 되나 callsite 0 — runtime 에서 기능 미작동.
+
+  ugc-platform-002 Group 001 Major 1: `ContentDomainService.setSourceContentId`
+  메서드 존재하나 0 callsite (grep 결과 1 hit = 정의 뿐). Contract 는
+  "sourceContentId 영구 저장" 을 요구하지만 createOne 과 연결되지 않음.
+
+  ugc-platform-002 Group 001 dead factory: `buildGenerationCompletedEvent` (custom-
+  prompt-generation.factory) 정의되나 emit 사이트 0. Custom-prompt 재생성 파이프
+  라인이 런타임에 동작 안 함 (validation 만 활성).
+detection: |
+  - 신규 hook/factory 추가 시 Contract Verification Method 에 callsite grep 게이트:
+    `rg '{hookName}\(' src --glob '*.tsx' --glob '*.ts'` → ≥ 1 hit (정의 1 + callsite N)
+    → N ≥ 1 확인
+  - 0 hit 또는 1 hit 만 (정의 자신만) 이면 dead — Major 판정
+  - Evaluator 는 definition vs callsite count 분리 확인: `grep -n '^export' src | wc -l`
+    와 `grep -c 'hookName(' src` 비교
+prevention: |
+  Contract Verification Method 에 'Dead hook/method/factory grep' 게이트 표준화:
+    - `rg '{hookName}\(' app/src --glob '*.tsx' --glob '*.ts'` → ≥ 1 hit
+    - FE Engineer / BE Engineer 프롬프트에 self-verification 단계로 명시
+  Contract 에서 "신규 컴포넌트/훅/팩토리" 라고 명시되면 반드시 "이 훅은 {컴포넌트명}
+  내에서 호출된다" 와 같이 callsite 를 명시.
+  Group 002/003 에서 게이트 반영 → Group 003 에서 재발 없음.
+contract_clause: |
+  신규 hook/method/factory/컴포넌트 추가 시 Done Criteria 에 필수:
+  - [ ] `rg '{hookName}\(' src` → ≥ 1 hit (정의 제외 실제 callsite)
+  - [ ] Contract 가 callsite 위치를 구체 명시 (컴포넌트명 + 호출 조건)
+  - [ ] 0 hit 시 Major — dead 판정
+example:
+  bad: |
+    // ❌ Contract: "FilterDeletedErrorModal 컴포넌트 신설"
+    // 구현: Toast fallback 으로 대체 — Modal 컴포넌트 파일만 생성하고 사용 안 함
+    export function filterDeletedErrorModal() { /* ... */ }
+    // callsite: 0 — grep 으로 확인 필요
+  good: |
+    // ✓ Contract Verification Method:
+    //   `rg 'filterDeletedErrorModal\(' src` → ≥ 1 hit
+    // 구현:
+    export function showFilterDeletedErrorModal() { /* ... */ }
+    // useCase 내 error handler:
+    if (err.errorCode === 'SOURCE_CONTENT_DELETED') {
+      showFilterDeletedErrorModal();  // ← callsite 1
+    }
+schema_version: 1

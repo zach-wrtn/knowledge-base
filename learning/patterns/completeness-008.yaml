@@ -1,0 +1,57 @@
+id: completeness-008
+title: Mapper/Entity 확장 시 semantic-breaking fallback (`?? 0`, `?? false`, `|| ""`) 로 core feature 오작동
+category: completeness
+severity: major
+source_sprint: ugc-platform-002
+source_group: group-001
+discovered_at: '2026-04-23T00:00:00+09:00'
+frequency: 2
+last_seen: ugc-platform-002
+description: |
+  Entity/DTO 확장 시 optional default (`likeCount ?? 0`, `liked ?? false`,
+  `userProfile.id || ""`, DB persist 누락으로 `sourceContentId = null`) 등이
+  semantic 을 깨뜨린다. isOwn 판정 / self-like 판정 / payback idempotency 같은
+  core feature 가 미묘하게 오작동하며, 정상 동작처럼 보여 detection 이 지연됨.
+
+  ugc-platform-002 Group 001 Major 1: be-002 가 sourceContentId 를 event payload 에
+  전파하나 ContentRepository.createOne 이 수용하지 않아 Content document 에는 null 로
+  남음 → ContentSummary.sourceContentId 항상 null → api-contract 위반.
+
+  ugc-platform-002 Group 002 Major 1: meme.mapper 의 `userProfile.id = ""` fallback 으로
+  `isOwn = item.userProfile.id === currentUserId` 가 MY profile 진입 시 항상 false →
+  PublishToggle 미렌더 + CTA 오표시 (핵심 feature stubbing 근접).
+detection: |
+  - Evaluator trace: 실제 API response / DB document 에서 필드 값 확인
+  - grep 게이트: `rg '{fieldName}\s*\?\?\s*0|{fieldName}\s*\?\?\s*false' src` → 0 hit 의무
+  - api-contract required 필드는 Zod 에서도 required 강제 — 파싱 실패 시 item skip (Phase 2 패턴)
+  - Active evaluation: self-like / owner 판정 같은 boundary 비교를 mapper fallback 값 trace
+prevention: |
+  Contract Verification Method 에 'Mapper fallback 금지 grep' 게이트 표준화:
+    - `rg 'likeCount\s*\?\?\s*0|liked\s*\?\?\s*false|\|\|\s*""' src` → 0 hit
+  Zod 스키마에서 optional 아닌 필드는 필수 (`.nonnegative()`, `.boolean()`) 강제.
+  파싱 실패 시 fallback 금지 — 해당 item 을 feed 에서 제외 (skip).
+  Group 003 에서 선제 적용하여 first-try PASS 달성.
+contract_clause: |
+  Entity/DTO 확장 시 Contract Done Criteria 에 다음 조항 필수:
+  - [ ] Zod 스키마 필수 필드 강제 (optional 남용 금지)
+  - [ ] Mapper fallback 금지 grep 게이트: `rg '?? 0|?? false|\|\| ""' src → 0 hit`
+  - [ ] 파싱 실패 시 item skip (Phase 2 pattern 일관)
+  - [ ] DB persist 확인: `createOne` input 에 해당 필드 포함 여부 trace
+example:
+  bad: |
+    // ❌ Mapper fallback
+    return {
+      id: raw.id,
+      userProfile: { id: raw.userProfile?.id || "" },  // semantic 훼손
+      likeCount: raw.likeCount ?? 0,                     // required 인데 default 주입
+      liked: raw.liked ?? false,                         // caller 기준 판정이 부정확
+    };
+  good: |
+    // ✓ Zod 필수 + fallback 금지
+    const parsed = FeedItemSchema.safeParse(raw);
+    if (!parsed.success) {
+      logger.warn({ message: 'Feed item parse failed, skipping', itemId: raw.id });
+      return null;  // feed 에서 제외
+    }
+    return parsed.data;
+schema_version: 1

@@ -1,0 +1,59 @@
+id: completeness-010
+title: Cross-component 적용 범위 전수 명시 누락 — Contract '모든 path' 언급에도 partial coverage
+category: completeness
+severity: major
+source_sprint: ugc-platform-002
+source_group: group-001
+discovered_at: '2026-04-23T00:00:00+09:00'
+frequency: 2
+last_seen: ugc-platform-002
+description: |
+  Entity/DTO 확장 시 Contract 가 "모든 피드 endpoint" / "모든 진입 path" 처럼
+  포괄적으로 언급하나, 구현자가 일부 경로만 반영. 결과: partial coverage —
+  일부 screen 에서 신규 필드 미지원 (렌더 안 됨, error, zod parse 실패).
+
+  ugc-platform-002 Group 001 Major 2: Contract §be-004 는 "ContentSummary.likeCount /
+  liked 모든 피드 엔드포인트 응답 포함 (me-contents, users-public, 기존 feed)" 명시.
+  be-001/002/003 은 me-contents / users-public 에 반영되나 **FeedResponseDto (grid/
+  swipe feed 공용)** 에 5 필드 0개. FeedAppService 가 LikeDomainService 미의존.
+
+  ugc-platform-002 Group 002 Major 1: SwipeFeed ownership threading — Contract 의
+  "3 path 모두 동일 mapper 경유" 요구에도 MY profile kind=me path 에서 `userProfile.id=""`
+  fallback 으로 isOwn 오판.
+
+  ugc-platform-002 Group 003 (Contract 단계 선제 방지): 'Cross-variant mapper 정합'
+  Done Criterion 에 3 진입 path 명시적 나열 (MY 3-tab / ProfileToSwipeFeed / legacy 홈)
+  → 구현 시점 재발 없음.
+detection: |
+  - Contract review (Round 1) 단계에서 "모든 path" 같은 포괄 표현 발견 시 구체 path 목록
+    요구
+  - Evaluator 검증: entity 확장 response 를 모든 related endpoint 에서 snapshot
+    (`/v2/me/contents`, `/v2/users/:userId/contents`, `/v2/feeds/grid`, `/v2/feeds/swipe`)
+  - grep: 신규 필드가 모든 response DTO 에 포함되는지 확인
+prevention: |
+  Contract Scope 또는 Cross-group Integration 섹션에 다음 의무:
+    "Entity/DTO 확장은 영향 받는 모든 endpoint/path 를 전수 나열"
+  Discriminated union variant 가 3개+ 인 경우 각 variant 의 queryFn + mapper 경유
+  trace 를 Done Criterion 으로 승격.
+  Evaluator Round 1 review 에서 "모든" / "전체" / "각" 등 포괄 표현 발견 시 구체 path
+  목록 요구 patch 필수.
+contract_clause: |
+  Contract §Cross-group Integration 또는 §Scope 에 필수:
+  - [ ] Entity/DTO 확장이 영향 받는 endpoint / path 전수 나열
+  - [ ] Discriminated union variant 3+ 인 경우 각 variant 의 mapper 경유 trace 의무
+  - [ ] Evaluator 는 각 path 의 response snapshot / queryFn trace 로 정합 확인
+example:
+  bad: |
+    // ❌ Contract: "ContentSummary.likeCount 가 모든 피드 응답에 포함"
+    // 구현: me-contents / users-public 에만 추가
+    // FeedResponseDto, SwipeFeedResponseDto 는 확장 누락
+  good: |
+    // ✓ Contract Scope:
+    //   ContentSummary.likeCount 확장은 다음 5 response DTO 모두 반영:
+    //   - /v2/me/contents (list + counts)
+    //   - /v2/users/:userId/contents
+    //   - /v2/feeds/grid (FeedResponseDto)
+    //   - /v2/feeds/swipe/:targetId (SwipeFeedResponseDto)
+    //   - /v2/contents/:id/likes (LikeToggleResponse)
+    //   각 endpoint 의 unit test 에서 필드 existence assert
+schema_version: 1
