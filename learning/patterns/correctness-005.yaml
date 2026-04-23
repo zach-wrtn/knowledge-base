@@ -1,0 +1,63 @@
+id: correctness-005
+title: Cursor encoding reference pattern — `page[limit]` extra item 사용 (formal grep gate 외에 reference 파일 경로 명시 필수)
+category: correctness
+severity: major
+source_sprint: ugc-platform-003
+source_group: group-001
+discovered_at: '2026-04-23T00:00:00+09:00'
+frequency: 1
+last_seen: ugc-platform-003
+description: |
+  correctness-004 확장: repository 쿼리에서 `$lte` 사용은 필수이지만, cursor 로 인코딩
+  **어떤 item 을 선택** 하는지도 semantic 정합의 축. 올바른 규약은 `page[limit]`
+  (limit+1 번째 extra item, zero-indexed) — 현재 page 에 미표시되는 item 의 id 를
+  cursor 로. `truncated[limit-1]` (마지막 표시 item) 을 사용하면 `$lte` 와 결합 시
+  createdAt tie 케이스에서 page boundary 중복 발생.
+
+  ugc-platform-003 Group 001 Major 1: `buildListResponse` 가 `truncated[truncated.
+  length - 1]` (last-shown) 을 cursor 로 인코딩. `_id: $lte: cursor` + tie createdAt
+  조합 시 page 2 의 첫 item 이 page 1 의 last item 과 중복. reference
+  `me-contents-app.service.ts:buildLikedListResponse` 는 `cursorItems[limit]`
+  (extra item) 사용 — 올바른 규약.
+
+  correctness-004 는 `$lt` vs `$lte` 연산자 축만 다루지만, item selection 축을
+  형식 grep 으로 잡을 수 없음. Contract 에 reference 구현 파일 경로 명시가 필요.
+detection: |
+  - Evaluator active trace: extra fetch (limit+1) → truncate (limit) → cursor encoding
+    에서 어떤 index 의 item 을 선택하는지 확인
+  - page boundary 중복 repro: seed createdAt 동일한 3 건 + limit=2 → page 1 + page 2
+    list 교집합 non-empty 시 위반
+  - Reference 비교: `me-contents-app.service.ts:buildLikedListResponse` 의 `cursorItems[limit]`
+    vs 신규 구현의 cursor selection
+prevention: |
+  - Contract Done Criteria 에 단순 grep gate 외에 reference 파일 경로 명시 의무:
+    "Cursor encoding: reference `me-contents-app.service.ts:buildLikedListResponse`
+     (또는 previous group 의 buildListResponse) — `page[limit]` extra item 사용"
+  - buildListResponse 류 helper 는 shared library 로 승격 검토 (skill_candidate)
+  - page fetch 는 `limit + 1` 로 고정 (hasNext 판정 + extra item 노출 목적)
+contract_clause: |
+  Cursor pagination buildListResponse 류 helper 작성 시:
+    - `page[limit]` (extra item, zero-indexed) 을 cursor 로 인코딩
+    - `truncated[last-shown]` 사용 금지
+    - reference: `me-contents-app.service.ts:buildLikedListResponse`
+      (또는 previous group 의 동일 helper)
+  Contract §Done Criteria 에 reference 파일 경로 명시 의무.
+example:
+  bad: |
+    // ❌ last-shown 을 cursor 로
+    const hasNext = page.length > limit;
+    const truncated = hasNext ? page.slice(0, limit) : page;
+    const last = truncated[truncated.length - 1];
+    return { list: truncated, lastCursorFields: { createdAt: last.createdAt, id: last.id }, hasNext };
+    // 문제: createdAt tie 케이스에서 page 2 의 첫 item = page 1 의 last item (중복)
+  good: |
+    // ✓ extra item 을 cursor 로 (reference: me-contents-app.service.ts:buildLikedListResponse)
+    const hasNext = page.length > limit;
+    const truncated = hasNext ? page.slice(0, limit) : page;
+    const extraItem = hasNext ? page[limit] : null;  // limit+1 번째 = 다음 page 의 첫 item
+    return {
+      list: truncated,
+      lastCursorFields: extraItem ? { createdAt: extraItem.createdAt, id: extraItem.id } : null,
+      hasNext,
+    };
+schema_version: 1

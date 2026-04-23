@@ -1,0 +1,45 @@
+id: completeness-011
+title: E2E appId inconsistency — 신규 yaml 에서 canonical 값 (`com.wrtn.zzem.dev`) 미확인
+category: completeness
+severity: major
+source_sprint: ugc-platform-003
+source_group: group-001
+discovered_at: '2026-04-23T00:00:00+09:00'
+frequency: 1
+last_seen: ugc-platform-003
+description: |
+  신규 E2E Maestro yaml 작성 시 `appId` 필드가 기존 flow 들 (30+개) 의 canonical
+  값 (`com.wrtn.zzem.dev`) 과 불일치. 잘못된 appId → Maestro 가 앱 launch 실패 →
+  flow 실행 자체 불가. formal check 없으면 런타임에만 발견.
+
+  ugc-platform-003 Group 001 Major 2: `my-profile-follower-list.yaml` / `my-profile-
+  following-list.yaml` 에서 `appId: io.wrtn.meme` 사용 (같은 그룹의 `follow-button-
+  tap.yaml` 은 canonical 값 사용). 30+ 기존 flow 전부 `com.wrtn.zzem.dev` 이지만 신규
+  2 yaml 만 drift. Evaluator active review 로 grep 대조해 발견.
+detection: |
+  - Contract §E2E 에 grep gate 명시: `rg '^appId:' app/apps/MemeApp/e2e/flows | awk '{print $2}' | sort -u | wc -l → 1`
+  - uniq count 가 1 이 아니면 drift
+  - 기존 flow 중 1개를 reference 로 appId 복사 (template-first workflow)
+prevention: |
+  - 신규 E2E yaml 작성 시 canonical `appId: com.wrtn.zzem.dev` 필수
+  - Contract §Done Criteria 에 uniformity grep gate 표준 조항 포함
+  - E2E template 파일 제공 (appId 하드코딩) — skill_candidate
+contract_clause: |
+  신규 E2E yaml 작성 시 canonical appId 사용 필수:
+    - `com.wrtn.zzem.dev` (MemeApp 기준, 프로젝트마다 상이)
+    - grep gate: `rg '^appId:' e2e/flows | sort -u | wc -l → 1`
+  Contract §Done Criteria 에 명시 — 신규 yaml 추가 시 기존 flow 1개 reference 로 복사.
+example:
+  bad: |
+    # ❌ 신규 yaml 에서 drift
+    appId: io.wrtn.meme  # canonical 아님
+    ---
+    - launchApp: { clearState: true }
+    - openLink: zzem://follower-list
+  good: |
+    # ✓ canonical 값 사용 — 기존 flow 에서 appId 복사
+    appId: com.wrtn.zzem.dev
+    ---
+    - launchApp: { clearState: true }
+    - openLink: zzem://follower-list
+schema_version: 1

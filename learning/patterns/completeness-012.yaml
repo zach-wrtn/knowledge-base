@@ -1,0 +1,56 @@
+id: completeness-012
+title: Test assertion literal drift — production 상수 (queryKey / eventType / enum) literal 복제
+category: completeness
+severity: major
+source_sprint: ugc-platform-003
+source_group: group-004
+discovered_at: '2026-04-23T00:00:00+09:00'
+frequency: 1
+last_seen: ugc-platform-003
+description: |
+  Test 파일이 production 상수 (React Query key, event type, enum value, URL pattern
+  등) 를 hardcoded string/array literal 로 복제하는 경우, production 코드가 변경되면
+  테스트가 silent 하게 drift 하여 assertion failure. Formal grep gate 로 잡히지 않고
+  `yarn test` 실행에서만 발견됨.
+
+  ugc-platform-003 Group 004 Major 1: `usePushNotificationHandler.test.tsx` 가
+  LIKE foreground 케이스에서 `arrayContaining([["notifications"],
+  ["notifications-unread-count"]])` 로 assert 했으나, 실제 handler 는 app-006 의
+  `notificationQueryKey.myNotifications` (= `["@notification", "getMyNotifications"]`)
+  와 `.unreadCount` (= `["@notification", "getUnreadCount"]`) 를 사용. 초기 hardcoded
+  placeholder 가 reconciliation 단계에서 production 은 교체됐지만 test 는 안 됨.
+detection: |
+  - Evaluator active trace: 테스트 파일 assertion 이 typed import 인지 literal 인지 확인
+  - grep gate: test 파일에서 `queryKey: [` / `type: "` 류 literal 발견 시 production 출처 확인
+  - Better: TypeScript strict mode 가 typed import 를 강제 — 하지만 string literal 비교는 compile 통과
+prevention: |
+  - 테스트 파일에서 production 상수를 literal 로 복제 금지
+  - 반드시 production module 에서 typed import (e.g., `import { notificationQueryKey } from "~/data/notification"`)
+  - Spec 수정 시 reconciliation checklist 에 test 파일 포함 — 직전 commit 이 production 상수 변경이면 test 파일 grep 대조 의무
+  - skill_candidate: 자동 import 제안 tool
+contract_clause: |
+  테스트 파일에서 queryKey / eventType / enum / URL pattern 등 production 상수를
+  literal 로 복제 금지. 반드시 production module 에서 typed import.
+  Contract §Default Verification Gates 조항:
+    - grep: test 파일에서 `queryKey: ["@<module>", ...]` literal 발견 시 Major
+    - Production 상수 변경 시 test reconciliation checklist 의무
+example:
+  bad: |
+    // ❌ test.tsx 가 literal 복제
+    expect(invalidatedKeys).toEqual(
+      expect.arrayContaining([
+        ["notifications"],              // ← production 은 ["@notification", ...]
+        ["notifications-unread-count"],
+      ])
+    );
+  good: |
+    // ✓ typed import
+    import { notificationQueryKey } from "~/data/notification";
+    // ...
+    expect(invalidatedKeys).toEqual(
+      expect.arrayContaining([
+        notificationQueryKey.myNotifications,
+        notificationQueryKey.unreadCount,
+      ])
+    );
+schema_version: 1

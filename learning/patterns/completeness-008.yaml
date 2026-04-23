@@ -5,8 +5,8 @@ severity: major
 source_sprint: ugc-platform-002
 source_group: group-001
 discovered_at: '2026-04-23T00:00:00+09:00'
-frequency: 2
-last_seen: ugc-platform-002
+frequency: 3
+last_seen: ugc-platform-003
 description: |
   Entity/DTO 확장 시 optional default (`likeCount ?? 0`, `liked ?? false`,
   `userProfile.id || ""`, DB persist 누락으로 `sourceContentId = null`) 등이
@@ -31,6 +31,8 @@ prevention: |
   Zod 스키마에서 optional 아닌 필드는 필수 (`.nonnegative()`, `.boolean()`) 강제.
   파싱 실패 시 fallback 금지 — 해당 item 을 feed 에서 제외 (skip).
   Group 003 에서 선제 적용하여 first-try PASS 달성.
+  ugc-platform-003 에서 3번째 관측 — Group 001/002/003/004 전부 gate 통과 (0 hit).
+  Rubric v4 승격 후보 (2nd promotion log entry).
 contract_clause: |
   Entity/DTO 확장 시 Contract Done Criteria 에 다음 조항 필수:
   - [ ] Zod 스키마 필수 필드 강제 (optional 남용 금지)

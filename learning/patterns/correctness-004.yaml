@@ -5,8 +5,8 @@ severity: major
 source_sprint: ugc-platform-001
 source_group: group-001
 discovered_at: '2026-04-22T17:30:00+09:00'
-frequency: 1
-last_seen: ugc-platform-001
+frequency: 2
+last_seen: ugc-platform-003
 description: |
   이 코드베이스의 CursorResponseDto 규약은 `list[limit]` 의 extra 아이템 id 를
   다음 페이지 cursor 로 인코딩한다 (fetch limit+1 개 → list 잘라내기 → 마지막
