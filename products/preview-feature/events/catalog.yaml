@@ -1,0 +1,17 @@
+product: preview-feature
+owner: Walter
+last_updated: "2026-04-27"
+schema_version: 1
+
+# preview-feature 프로덕트가 도입/수정하는 이벤트 카탈로그.
+# 현재 구현 기준 신규 이벤트명 추가는 없고, 기존 세로 피드 CTA 이벤트에 preview button_name을 확장한다.
+
+events:
+  - name: click_vertical_feed_action_btn
+    trigger: "SwipeFeed 하단 미리보기 CTA 탭"
+    properties:
+      service_detail: '"filter" (리터럴)'
+      filter_id: "string | null — 현재 필터 ID(parent filter)"
+      filter_title: "string | null — 현재 필터명"
+      button_name: '"preview" — 결과물 미리보기 진입 CTA'
+    notes: "[modified] 기존 세로 피드 CTA 이벤트의 button_name union에 preview 추가 | loggers: mixpanel, airbridge, firebase | impl: use-swipe-feed-preview.tsx"
