@@ -1,0 +1,71 @@
+id: correctness-006
+title: 단건 조회와 목록 조회의 활성 판정 조건이 비대칭이면 단건만 404 발생
+category: correctness
+severity: major
+source_sprint: free-filter-qa-fix
+source_group: group-1
+discovered_at: '2026-04-27T22:48:52+09:00'
+frequency: 1
+last_seen: free-filter-qa-fix
+description: |
+  같은 도메인의 list 쿼리와 single-document 쿼리가 활성 판정 (deleted/active/published)
+  조건을 다르게 표현하면 timestamp 필드가 일부만 채워진 케이스 (예: 무료 슬롯, legacy
+  document, 임시 도큐먼트) 에서 list 는 통과하나 single 만 매치 실패 → 404. UI 가
+  단건 조회를 useSuspenseQuery 로 호출하면 throw 가 ErrorBoundary 로 노출되어 에러
+  화면. 같은 root cause 가 단일 helper 의 여러 callsite (preview / create / admin)
+  에서 다른 user-visible 증상으로 분기.
+
+  실제 사례 (free-filter-qa-fix Group 1):
+  - findActiveByIds 는 `$or: [{ activatedAt: { $lte: now } }, { activatedAt: { $exists: false } }]`
+  - findOneActive 는 `{ activatedAt: { $lte: now } }` 단독 → 무료 필터 (activatedAt 미설정) 단건 404
+  - IS-1365 (preview), IS-1367 (create) 두 ticket 의 단일 root cause
+detection: |
+  - grep: 같은 컬렉션을 조회하는 list 와 single 쿼리의 매칭 조건을 비교 — `findActiveByIds`
+    vs `findOneActive`, `findMany` vs `findOne` 등
+  - "$or: [...]", "$exists: false" 같은 누락 가능 timestamp 가드를 한쪽만 가지고 있으면
+    비대칭 의심
+  - 단건 404 가 list 200 과 모순될 때 (목록엔 노출되는데 단건 조회 안 됨) 즉시 trace
+  - 공유 단건 helper 의 모든 callsite 에서 같은 entity 조회를 시도하는 user 시나리오
+    (preview / create / admin) 가 동일 응답을 받는지 verify
+prevention: |
+  Repository 의 활성 판정 조건을 단일 helper / shared filter object 로 추출하여
+  list/single 양쪽이 같은 조건을 사용. 분리 helper 가 필요하면 Contract 의 Done
+  Criteria 에 "activation 조건은 list/single 쿼리에서 동일 표현 사용" 명시.
+  공유 단건 helper 의 callsite 변경 시 모든 사용 path (preview / create / admin /
+  external entry) 의 user 시나리오 회귀 검증 의무.
+contract_clause: |
+  동일 컬렉션의 활성 판정 조건은 list (findActiveByIds 등) 와 single
+  (findOneActive 등) 쿼리 사이에서 구조적으로 동일해야 한다. 누락 가능 timestamp
+  필드 ($exists: false) 보강 등 모든 가드가 양쪽에 일관 적용. 공유 단건 helper 의
+  변경 시 callsite 전수 (preview / create / admin / external entry) 의 사용자
+  시나리오 회귀 검증.
+example:
+  bad: |
+    // ❌ 비대칭 — single 만 $exists 가드 누락
+    async findActiveByIds(ids) {
+      return repo.findAll({
+        _id: { $in: ids },
+        $or: [{ activatedAt: { $lte: now } }, { activatedAt: { $exists: false } }],
+      });
+    }
+    async findOneActive(id) {
+      return repo.findOneByOptions({
+        _id: id,
+        activatedAt: { $lte: now },  // ← 단건만 404 (activatedAt 미설정 시)
+      });
+    }
+  good: |
+    // ✓ 동일 조건 — shared filter
+    const activeFilter = (idClause) => ({
+      ...idClause,
+      deletedAt: { $exists: false },
+      isActive: { $ne: false },
+      $or: [{ activatedAt: { $lte: new Date() } }, { activatedAt: { $exists: false } }],
+    });
+    async findActiveByIds(ids) {
+      return repo.findAll(activeFilter({ _id: { $in: ids } }));
+    }
+    async findOneActive(id) {
+      return repo.findOneByOptions(activeFilter({ _id: id }));
+    }
+schema_version: 1
