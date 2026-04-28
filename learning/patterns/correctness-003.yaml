@@ -5,8 +5,8 @@ severity: major
 source_sprint: free-tab-diversification
 source_group: group-002
 discovered_at: '2026-04-14T00:00:00+09:00'
-frequency: 1
-last_seen: free-tab-diversification
+frequency: 2
+last_seen: ugc-platform-integration-qa-3
 description: |
   서버 응답의 파생 필드(requiredCredit, price 등)가 실제 생성 시 서버가 계산하는
   eligibility와 다른 source를 참조할 때 UI에는 "무료"로 보이지만 생성 시 유료로

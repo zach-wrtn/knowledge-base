@@ -1,0 +1,57 @@
+id: completeness-015
+title: 비동기 작업 list 응답에서 실패 항목을 retention 윈도우 없이 즉시 제외하지 말 것
+category: completeness
+severity: major
+source_sprint: ugc-platform-integration-qa-3
+source_group: group-005
+discovered_at: '2026-04-28T15:45:00+09:00'
+frequency: 1
+last_seen: ugc-platform-integration-qa-3
+description: |
+  BE 가 "active generations / in-flight tasks / pending uploads" 같은 사용자 큐를
+  list 응답으로 노출할 때, status=ERROR 종결 시 즉시 응답에서 제외하면 사용자는
+  "내가 요청한 게 어디 갔지?" 상태가 된다 (가시성 깨짐). 짧은 retention 윈도우를
+  두어 클라이언트가 실패 표현을 렌더할 시간을 확보해야 한다.
+  실제 사례: IS-1402 — BE `findAllInProgressByUser` 가 status=PROGRESS 만 필터 →
+  ERROR 즉시 list 에서 사라짐. FE 의 ProfilePendingSection 가 error 분기 UI 를
+  보유했음에도 BE 가 항목 자체를 응답에서 제외하여 사용자 가시성 깨짐. 해소:
+  `findActiveOrRecentlyErroredByUser` (PROGRESS + 최근 5분 ERROR retention 윈도우).
+detection: |
+  - BE service / repository 의 list 쿼리에 `status: { $in: [PROGRESS] }` 또는
+    `status: { $ne: ERROR }` 필터가 있는지 확인
+  - 동일 list 응답을 보는 FE 가 error 분기 UI 를 가지고 있는지 callsite trace
+  - ERROR retention 윈도우 (예: 5분) 가 query 에 명시적으로 적용되는지 확인
+  - QA 회귀 "생성 실패 시 목록도 사라짐" 패턴 발견 시 즉시 의심
+prevention: |
+  - "Active list" 응답은 PROGRESS 외에 최근 N분 ERROR 도 포함하도록 기본 강제
+  - 신규 list endpoint 설계 시 retention 윈도우 default 결정 (5분 권장) 후 contract 명시
+  - FE 의 error 분기 UI 가 살아있는지 확인하지 않고 BE 에서 단순 status 필터 도입 금지
+  - Repository helper 명명: `findActiveOrRecentlyErrored*` 패턴 정착
+contract_clause: |
+  사용자 가시성 list 응답 (in-flight tasks, active generations 등) 은 status 필터로
+  ERROR 항목을 즉시 제외하지 않는다. 최소 5분 retention 윈도우를 두어 FE 의 error
+  분기 UI 가 노출될 시간을 보장한다. retention 윈도우 미적용 시 contract 에서 사유 명시.
+example:
+  bad: |
+    // BE repository — ERROR 즉시 제외
+    async findActiveByUser(userId: string) {
+      return this.model.find({
+        userId,
+        status: { $in: [Status.PROGRESS] }  // ERROR 즉시 누락
+      });
+    }
+  good: |
+    // BE repository — PROGRESS + 최근 5분 ERROR 보존
+    async findActiveOrRecentlyErroredByUser(
+      userId: string,
+      errorSince: Date  // 5분 전
+    ) {
+      return this.model.find({
+        userId,
+        $or: [
+          { status: Status.PROGRESS },
+          { status: Status.ERROR, errorAt: { $gte: errorSince } }
+        ]
+      });
+    }
+schema_version: 1

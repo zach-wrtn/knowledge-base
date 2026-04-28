@@ -1,0 +1,60 @@
+id: edge_case-004
+title: Native bridge 호출 (Linking.openURL 등) 전 falsy/empty string 사전 guard
+category: edge_case
+severity: major
+source_sprint: ugc-platform-integration-qa-3
+source_group: group-004
+discovered_at: '2026-04-28T15:45:00+09:00'
+frequency: 1
+last_seen: ugc-platform-integration-qa-3
+description: |
+  React Native 의 native bridge 호출 (Linking.openURL, navigation.navigate(undefined),
+  Image source={{uri: ""}} 등) 은 빈 string 또는 falsy 입력 시 native side 의 비결정적
+  crash 발생 가능성이 있다 (RN 0.74 기준). 데이터 source (BE 응답, props, storage)
+  가 string schema 만 강제하고 length 또는 validity 를 강제하지 않으면, edge case
+  (BE 회귀, race) 에서 빈 string 이 native bridge 까지 도달해 사용자 crash.
+  실제 사례: IS-1407 — 알림 deeplink target id 가 빈 string ("") 일 때 Linking.openURL
+  호출 → native side crash. BE 가 nullable target id 를 빈 string 으로 응답하던
+  엣지 케이스. 해소: BE single-chokepoint validation (notification.repository 에서
+  empty deeplink throw) + FE 사전 falsy/empty guard 이중 방어.
+detection: |
+  - grep `Linking\.openURL\(|navigation\.navigate\(|navigation\.replace\(|<Image source=`
+    결과 중 인자가 변수만 들어가고 falsy/empty guard 없는 케이스
+  - 데이터 source schema 가 z.string() 만 사용 (z.string().min(1) 미적용) 인 케이스
+  - BE response 의 nullable URL/id 필드가 빈 string 으로 직렬화되는 path
+  - QA crash 보고 시 native bridge stack trace 포함 여부 확인
+prevention: |
+  - Defense-in-depth: BE single-chokepoint validation (repository / mapper 에서 empty throw)
+    + FE 사전 falsy/empty guard (try/catch fallback)
+  - Schema 강제: 데이터 source 의 string 필드는 z.string().min(1) 또는 z.string().url()
+    로 validity 강제
+  - Native bridge wrapper 함수 도입 시 인자 검증 (예: `safeOpenURL(url) → if (!url) return`)
+  - FE jest test 로 "empty string → guard 발동" 회귀 가드 추가
+contract_clause: |
+  Native bridge 호출 (Linking.openURL, navigation.navigate, Image source 등) 은 인자
+  validity 를 호출 직전에 강제 검증한다. 데이터 source schema 가 length/validity 를
+  강제하지 않는 경우, callsite 에서 falsy/empty guard 추가. BE single-chokepoint +
+  FE 사전 guard 의 defense-in-depth 패턴 권장.
+example:
+  bad: |
+    // FE: deeplink 인자 검증 부재
+    const handleNotificationPress = (item: Notification) => {
+      Linking.openURL(item.deeplink);  // empty string 도달 시 native crash
+    };
+  good: |
+    // FE: 사전 falsy/empty guard
+    const handleNotificationPress = (item: Notification) => {
+      if (!item.deeplink) {
+        // fallback: navigation 또는 toast
+        return navigation.navigate('Home');
+      }
+      Linking.openURL(item.deeplink).catch((err) => {
+        // 2차 fallback (BE schema 통과했지만 OS 거부)
+        console.warn('openURL failed', err);
+      });
+    };
+    // BE: notification.repository 에서 single-chokepoint
+    if (!input.deeplink || input.deeplink.length === 0) {
+      throw new BadRequestException('deeplink required');
+    }
+schema_version: 1

@@ -1,0 +1,61 @@
+id: edge_case-005
+title: Offscreen 미디어 preload 의 onError 를 사용자 차단 게이트로 사용하지 말 것
+category: edge_case
+severity: major
+source_sprint: ugc-platform-integration-qa-3
+source_group: group-005
+discovered_at: '2026-04-28T15:45:00+09:00'
+frequency: 1
+last_seen: ugc-platform-integration-qa-3
+description: |
+  1×1 픽셀 / paused 상태로 렌더되는 offscreen <Video>/<Image> 의 preload onError 는
+  네트워크 일시 실패, 코덱 cold-start, OS 디코더 race 등에 과민하게 발화한다.
+  이 결과를 사용자 액션 차단 게이트 (토스트 + 시트 미오픈 등) 로 사용하면
+  정상 미디어에서 false-positive 가 빈번하게 발생한다.
+  실제 사례: IS-1414 — `useVideoPreloader` (Feb 13 `081adaf02`) 의 offscreen 1×1 video
+  preload onError 가 RN 비디오 디코더 cold-start 시 false-positive 발화 → "비디오
+  재생 불가" 토스트 + 비디오 선택 시트 미오픈. 정상 비디오에서도 빈번 발생. 해소:
+  preload-toast 게이트 제거. 시트 내부 `VideoFilterPreview` 의 자체 onError + skeleton
+  에 위임.
+detection: |
+  - grep `useVideo.*Preload|preload\(` 결과 중 await 결과를 `if (!result) Toast.show(...)`
+    형태로 분기 차단하는 패턴
+  - offscreen Video 의 onError 를 외부에 propagate 하여 상위에서 거부하는 패턴
+  - 1×1 픽셀 / paused / hidden 미디어 컴포넌트의 onError handler 에서 user-facing
+    에러 표시를 호출하는 패턴
+  - QA 회귀 "정상 미디어인데 토스트/에러 표시" 패턴 발견 시 즉시 의심
+prevention: |
+  - Offscreen preload onError 는 metric / log 용도로만 사용 (사용자 액션 차단 금지)
+  - 사용자 액션 게이트는 시트 내부 컴포넌트의 자체 onError + skeleton 에 위임
+  - Preload helper 는 boolean 결과를 반환하지 말고, 항상 'optimistic open' 후 시트
+    내부에서 실제 재생 시도 → 거기서 에러 시 사용자 표시
+  - Dead hook 검출 시 cleanup 후속 ticket 분리 (KB completeness-009 위반 risk)
+contract_clause: |
+  Offscreen 미디어 preload (1×1 픽셀, paused, hidden) 의 onError 결과를 사용자 액션
+  차단 게이트로 사용하지 않는다. 사용자 액션은 시트 내부 / 활성 화면 컴포넌트의
+  자체 onError + skeleton fallback 에 위임. preload onError 는 metric / log 만
+  허용한다.
+example:
+  bad: |
+    // FE: offscreen preload 결과를 사용자 게이트로 사용
+    const handlePressVideo = async (video: Video) => {
+      const ok = await preloadVideo(video.url);  // 1×1 offscreen Video onError
+      if (!ok) {
+        Toast.show('비디오 재생 불가');  // false-positive 빈번
+        return;
+      }
+      openSheet(video);
+    };
+  good: |
+    // FE: optimistic open, 시트 내부 자체 onError 에 위임
+    const handlePressVideo = (video: Video) => {
+      openSheet(video);  // 항상 open
+    };
+
+    // 시트 내부 VideoFilterPreview:
+    <Video
+      source={{ uri: video.url }}
+      onError={(e) => setSheetError(e)}  // 사용자 화면에서 표시
+    />
+    {sheetError ? <ErrorSkeleton /> : null}
+schema_version: 1

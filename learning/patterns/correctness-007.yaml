@@ -1,0 +1,56 @@
+id: correctness-007
+title: BE response schema gate 보존 — FE skip-on-error/default 우회 시 회귀 마스킹
+category: correctness
+severity: major
+source_sprint: ugc-platform-integration-qa-3
+source_group: group-002
+discovered_at: '2026-04-28T15:45:00+09:00'
+frequency: 4
+last_seen: ugc-platform-integration-qa-3
+description: |
+  BE response 의 strict schema gate (필수 필드, fallback 금지) 가 의도된 design gate
+  인 경우, FE 가 schema 위반 시 skip-on-error / default 값 / 빈 fallback 으로 우회하면
+  회귀가 마스킹된다. 사용자 시각으로는 화면이 정상이지만 실제로는 BE 가 응답
+  필드를 누락한 상태가 누적되며, 다른 화면/feature 에서 동일 필드 의존 시 polymorphic
+  버그로 재발한다.
+  실제 사례:
+  - IS-1377 (likeCount/liked schema 회귀 의심) — strict gate 가 의도된 design (Group 002 M1).
+  - IS-1385 (BE isPublished 분류 회귀) — FE 가 default classification 으로 마스킹.
+  - IS-1383 (ActiveGeneration paid filter 식별 부재) — DTO 누락을 FE 가 분기 fallback.
+  - IS-1398 (FilterQueryAppService enrichFilters userProfile 비대칭) — enrichRecommendedFilters
+    와 path 비대칭, FE 가 zzem default name 으로 fallback.
+detection: |
+  - BE response 의 schema 가 strict (필수 필드, no default) 인지 design intent 확인
+  - FE 의 mapper / hook / component 에서 BE 필드를 `?? 'default'` / `|| []` /
+    `try { ... } catch { return null }` 형태로 우회하는 callsite grep
+  - 동일 list endpoint 의 path 별 (recommended vs general) enrichment 일관성 비교
+  - QA 회귀가 "일부 항목/일부 path 만" 발생하면 BE schema 회귀 의심
+prevention: |
+  - Group 002 M1 design gate 패턴 적용: P1 라도 schema gate 우회 금지
+  - FE 의 BE 필드 default/fallback 추가 PR 은 BE 응답 검증 후 reject (회귀 마스킹 방지)
+  - DEFERRED-BE 분류 — FE skip-on-error 가 fix 가 아닌 임시 우회임을 jira 코멘트에 명시
+  - BE list endpoint 의 cross-path enrichment 가 비대칭 시 shared resolveProfiles 등의
+    private method 정착으로 강제 일관성
+contract_clause: |
+  BE response 의 strict schema gate 를 FE 가 default/fallback/skip-on-error 로 우회하지
+  않는다. 우회가 필요한 경우 (회귀 발생) 에는 (a) BE schema 보강을 root fix 로 분리,
+  (b) FE 우회는 임시 명시 (`// TEMP: BE-defer IS-XXXX`), (c) Sprint Lead 가 DEFERRED-BE
+  로 분류하여 후속 라운드에 BE 응답 보강. P1 라도 design gate 우회 금지.
+example:
+  bad: |
+    // FE: BE schema 우회로 회귀 마스킹
+    const items = response.data.map(item => ({
+      ...item,
+      likeCount: item.likeCount ?? 0,           // BE 누락을 0 으로 fallback
+      liked: item.liked ?? false,               // BE 누락을 false 로 fallback
+      thumbnail: item.thumbnail ?? PLACEHOLDER, // BE 누락을 placeholder 로 fallback
+    }));
+  good: |
+    // FE: strict parse, 회귀 시 throw → DEFERRED-BE 로 분류
+    const items = response.data.map(item =>
+      itemSchema.parse(item)  // Zod strict, BE 누락 시 parse error
+    );
+    // 또는 collection-level skip-on-error:
+    const items = ItemMapper.toEntityCollection(response.data);
+    // (한 항목 invalid → 그 항목만 drop, 나머지 list 보존)
+schema_version: 1
