@@ -1,0 +1,70 @@
+id: completeness-017
+title: 동일 도메인 list 응답 path 가 동일 enrichment shape 을 보장 (shared helper 정착)
+category: completeness
+severity: major
+source_sprint: ugc-platform-integration-qa-4-be
+source_group: group-004
+discovered_at: '2026-04-29T00:00:00+09:00'
+frequency: 1
+last_seen: ugc-platform-integration-qa-4-be
+description: |
+  한 도메인의 여러 list 응답 path (예: enrichFilters / enrichRecommendedFilters,
+  follow list / feed user / block list) 가 서로 다른 enrichment shape 을 가지면
+  FE 가 일관되지 않은 데이터를 받아 잘못된 default 로 노출하는 회귀가 발생한다.
+  response DTO 의 optional 필드는 path 별로 채움/미채움 분기될 수 있어 문법적으로는
+  정상 (DTO 검증 통과) 이지만 사용자에게는 잘못된 표시가 된다.
+  실제 사례: IS-1398 — enrichRecommendedFilters 가 resolveUserProfiles + getDefaultProfile
+  로 userProfile 채우지만 enrichFilters 는 미채움 → UGC 필터가 일반 list 응답에서
+  zzem default 로 노출. mechanical parity (shared helper 호출 추가) 로 해결.
+detection: |
+  - 동일 application service 에 있는 list 응답 path 들이 같은 helper 를 호출하는지 매트릭스 작성
+  - grep `(enrich|build|resolve)\\w+` 로 application service 의 helper 호출 매트릭스 비교
+  - response DTO 의 optional 필드가 list 별로 채움/미채움 분기되는지 (반드시 의도된 분기여야 함)
+  - QA 보고에서 "특정 list 화면에서만 이상한 default 표시" 패턴 → 즉시 enrichment 비대칭 의심
+prevention: |
+  - Stage 3 contract 의 "Out-of-scope path" 섹션에 의도적인 비대칭 명시 (이유 + 별 sprint 권고)
+  - shared enrichment helper 추출:
+    - 같은 도메인의 list path 들이 모두 호출하는 private method 로 정착
+    - userProfile 같은 cross-domain enrichment 는 별 file 또는 base class 로 추출
+  - response DTO 의 optional 필드는 (a) 어떤 list path 가 채우는가 whitelist (b) 어떤 path 는 의도적으로 미채움
+    + 이유를 contract 단계에서 명시
+  - shared helper 가 cross-cutting normalize (예: normalizeProfileImageUrl) 와 통합되도록 정착
+contract_clause: |
+  동일 도메인의 list 응답 path 가 동일 enrichment shape 을 보장한다. enrichment
+  단계 (예: resolveUserProfiles + getDefaultProfile + getXxxForFilter) 는 private
+  helper method 로 추출하여 모든 path 가 호출. 의도적인 비대칭은 contract 의
+  "Out-of-scope path" 섹션에 명시 (이유 + 별 sprint 권고). response DTO 의 optional
+  필드는 "어떤 list path 가 채우는가" whitelist 를 contract 에 작성한다.
+example:
+  bad: |
+    // enrichRecommendedFilters: userProfile 채움 (Promise.all 에 4개)
+    const [creditMap, favoriteData, profileMap, defaultProfile] = await Promise.all([
+      this.creditService.getRequiredCreditMap(...),
+      this.favoriteService.getBatchFavoriteData(...),
+      this.resolveUserProfiles(userProfileIds),
+      this.getDefaultProfile(),
+    ]);
+    // ... userProfile 매핑
+    buildFilterResponse({ ..., userProfile });
+
+    // enrichFilters: userProfile 미채움 (asymmetric — Promise.all 에 2개)
+    const [creditMap, favoriteData] = await Promise.all([
+      this.creditService.getRequiredCreditMap(...),
+      this.favoriteService.getBatchFavoriteData(...),
+    ]);
+    buildFilterResponse({ ... });  // userProfile 누락 → FE 가 zzem default 로 노출
+  good: |
+    // 두 path 모두 동일 enrichment shape (private helper 로 추출하면 더 좋음)
+    const [creditMap, favoriteData, profileMap, defaultProfile] = await Promise.all([
+      this.creditService.getRequiredCreditMap(...),
+      this.favoriteService.getBatchFavoriteData(...),
+      this.resolveUserProfiles(userProfileIds),
+      this.getDefaultProfile(),
+    ]);
+    // ... userProfile 매핑 (getUserProfileForFilter)
+    const userProfile = this.getUserProfileForFilter(filter.userProfileId, profileMap, defaultProfile);
+    buildFilterResponse({ ..., userProfile });
+
+    // 의도적 비대칭이라면 contract 명시:
+    // "Out-of-scope: agent endpoint 는 raw 응답 보존 (디버깅 용도)"
+schema_version: 1

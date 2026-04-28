@@ -1,0 +1,66 @@
+id: completeness-016
+title: Soft-delete cascade 추가 시 scope guard (whitelist + out-of-scope + Stage 5 marker) 명시
+category: completeness
+severity: major
+source_sprint: ugc-platform-integration-qa-4-be
+source_group: group-003
+discovered_at: '2026-04-28T22:39:00+09:00'
+frequency: 1
+last_seen: ugc-platform-integration-qa-4-be
+description: |
+  Soft-delete cascade (예: 사용자 탈퇴 → follow / like / comment / block 데이터 처리)
+  를 추가할 때, 어떤 entity 가 cascade scope 에 포함되고 어떤 entity 는 의도적으로
+  제외되는지를 contract 단계에서 whitelist 로 명시하지 않으면 visibility 정책이
+  암묵적으로 결정되어 디자인/PM 의도와 vermichelt 한다. 반대로 모든 read path 에
+  deletedAt 필터를 일괄 추가하는 것도 정책을 implicit 하게 결정한다.
+  실제 사례: IS-1419 — 사용자 탈퇴 시 follow/like cascade (mechanical) 와
+  콘텐츠의 likeCount aggregate (정책) 분리. cascade-only 결정으로 정합 보존.
+detection: |
+  - cascade method 추가 PR 에서 (a) 어떤 entity 가 포함되는지 (b) 어떤 entity 는 제외되는지
+    (c) 정책 결정과 mechanical 누락의 분리 여부 명시 확인
+  - read path 에 deletedAt 필터 일괄 추가 시 사용자 가시성 정책 암묵적 결정 의심
+  - QA 보고에서 "탈퇴 / 삭제 후 잔존" 패턴이 multiple entity 에 걸쳐 보고되면 즉시 검토
+prevention: |
+  - Stage 3 contract 의 "Done Criteria" 섹션에 다음 3 항목 강제:
+    1. In-scope entity list (whitelist)
+    2. Out-of-scope entity list + reason (정책/별 sprint/등)
+    3. Stage 5 close 코멘트의 "scope limit notes" 작성 의무
+  - mechanical cascade 와 정책 결정 (visibility / aggregate / cross-user lookup) 을 분리하여
+    서로 다른 sprint scope 으로 처리
+  - cascade method 는 idempotent 를 의무화 (재호출 시 modifiedCount=0 보장)
+contract_clause: |
+  Soft-delete cascade method 추가 시 contract 에 (1) in-scope entity whitelist
+  (2) out-of-scope entity + reason (3) Stage 5 close 코멘트 scope limit marker
+  를 명시한다. mechanical cascade 와 visibility 정책 결정은 분리하여 별 sprint
+  scope 으로 처리한다. cascade method 는 idempotent 를 jest spec 으로 잠근다.
+example:
+  bad: |
+    // cascade 추가 PR 이 scope 명시 없이 mechanical 만 변경
+    async delete(id: string) {
+      await this.softDeleteUserProfile(id);
+      // ad-hoc cascade — 어디까지 적용할지 contract 부재
+      await this.userFollowDomainService.softDeleteByUserId(userId);
+      await this.likeDomainService.softDeleteByUserId(userId);
+      // ... 그런데 likeCount aggregate 은? user-block 은? notification 은?
+    }
+    // → reporter 가 "탈퇴 사용자 좋아요가 콘텐츠 카드 likeCount 에 잔존" 추가 보고
+  good: |
+    // contract 에 명시:
+    // In-scope: follow + like (mechanical cascade-only)
+    // Out-of-scope: likeCount aggregate (countByContent / countsByContentIds),
+    //               cross-user findLikedContentIds, user-block, notification
+    // Reason: 사용자 가시성 정책 결정 → 디자인 batch sprint
+    async delete(id: string) {
+      const profile = await this.findById(id);
+      if (!profile) throw new NotFoundException();
+      await this.softDeleteUserProfile(id);
+      const userId = profile.userId;
+      if (userId) {  // INTERNAL persona skip
+        await Promise.all([
+          this.userFollowDomainService.softDeleteByUserId(userId),
+          this.likeDomainService.softDeleteByUserId(userId),
+        ]);
+      }
+      // Stage 5 SSOT 의 "scope limit notes" 에 likeCount/cross-user 영역 별 sprint 권고
+    }
+schema_version: 1

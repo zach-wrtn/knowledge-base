@@ -1,0 +1,100 @@
+id: correctness-008
+title: Server-side validation contract — 사전 체크 + DB unique + 11000 race 변환 + FE errorCode 단일 판정 (3중 방어)
+category: correctness
+severity: major
+source_sprint: ugc-platform-integration-qa-4-be
+source_group: group-001
+discovered_at: '2026-04-28T23:30:00+09:00'
+frequency: 1
+last_seen: ugc-platform-integration-qa-4-be
+description: |
+  사용자 입력에 대한 uniqueness / 중복 검증 (닉네임, 이메일, 추천인 코드 등) 은
+  단일 layer 만으로 보호하면 race / 일반 케이스 어느 한쪽이 빠진다. 사전 체크만
+  두면 동시 요청 시 race 11000 이 일반 500 으로 노출되고, schema unique 만 두면
+  일반 케이스도 11000 catch 변환에 의존하여 에러 메시지 일관성이 저하된다.
+  FE 측은 statusCode 만 판정 (예: any 409) 시 다른 conflict 와 혼동 가능.
+  실제 사례: IS-1397 — PATCH /v2/me/profile 의 중복 닉네임 체크 부재. 3중 방어
+  (사전 체크 + DB unique + race 변환) + FE 의 errorCode 단일 판정으로 해결.
+detection: |
+  - 사용자 입력 uniqueness / 중복 검증 PR 에서 다음 3 가지 모두 적용되는지 확인:
+    1. Application/Domain 사전 체크 (`findOneByXxxExcludingSelf`)
+    2. DB-level partial unique index (active/non-deleted 만 적용)
+    3. 11000 catch → 동일 ConflictException + 동일 errorCode 변환
+  - FE 측이 statusCode 만 검사하는지 (errorCode 까지 검사하지 않으면 false-positive 위험)
+  - Self-update 케이스 (본인 동일 입력 그대로 PATCH) 가 false-positive 되는지
+prevention: |
+  - Stage 3 contract 강제 항목:
+    1. 사전 체크 method 정의 (repository / domain layer)
+    2. schema unique index — partial filter (active/non-deleted 만 적용)
+    3. 11000 → ConflictException 변환 — 동일 errorCode 보존
+    4. FE 측은 statusCode + errorCode 동시 검사
+  - Self-update (input === existing 값) 는 사전 체크 skip
+  - errorCode 상수는 BE 와 FE 양측에 export (1:1 일치 보장)
+  - jest race spec 1건 (사전 체크와 update 사이 11000 발생 시뮬레이션) + happy + self-update
+    skip + non-dup-key error 패스스루 4 case 의무
+contract_clause: |
+  사용자 입력 uniqueness 검증은 (a) Application/Domain 사전 체크 + (b) DB-level
+  partial unique index + (c) 11000 catch → ConflictException 변환 의 3중 방어로
+  구현한다. errorCode 상수는 BE/FE 양측에 export 하여 1:1 일치 보장. FE 는
+  statusCode + errorCode 동시 검사로 단일 판정. self-update 는 사전 체크 skip.
+  jest race spec 1건 + happy + self-update skip + non-dup error 패스스루 의무.
+example:
+  bad: |
+    // BE — 사전 체크만, DB unique index 부재
+    async updateMyProfileByUserId(userId: string, data) {
+      const existing = await this.repository.findOneByUserId(userId);
+      if (data.nickname) {
+        const conflicting = await this.repository.findByNickname(data.nickname);
+        if (conflicting) throw new ConflictException("이미 사용 중");
+      }
+      return this.repository.findByIdAndUpdate(existing.id, { $set: data });
+      // ↑ race: 사전 체크와 update 사이에 다른 user 가 같은 nickname 으로 update →
+      //   schema unique 부재로 둘 다 저장됨 (silent corruption)
+    }
+    // FE — statusCode 만 검사 (다른 409 와 혼동)
+    catch (error) {
+      if (error.response?.status === 409) showToast("이미 사용 중");
+      // ↑ blocking 등 다른 409 도 같은 토스트 → 사용자 혼동
+    }
+  good: |
+    // BE — 3중 방어 + self-update skip
+    export const ERROR_CODE_DUPLICATE_NICKNAME = "DUPLICATE_NICKNAME";
+
+    async updateMyProfileByUserId(userId: string, data) {
+      const existing = await this.repository.getOrCreateByUserId(userId);
+      // self-update skip
+      if (data.nickname && data.nickname !== existing.nickname) {
+        const conflicting = await this.repository.findOneByNicknameExcludingUserId(
+          data.nickname, userId
+        );
+        if (conflicting) {
+          throw new ConflictException({
+            errorCode: ERROR_CODE_DUPLICATE_NICKNAME,
+            message: "이미 사용 중인 닉네임입니다",
+          });
+        }
+      }
+      try {
+        return await this.repository.findByIdAndUpdate(existing.id, { $set: data });
+      } catch (error) {
+        if (this.isDuplicateKeyError(error)) {
+          // race 변환 — 동일 errorCode
+          throw new ConflictException({
+            errorCode: ERROR_CODE_DUPLICATE_NICKNAME,
+            message: "이미 사용 중인 닉네임입니다",
+          });
+        }
+        throw error;
+      }
+    }
+    // schema:
+    // index({ nickname: 1 }, { unique: true,
+    //   partialFilterExpression: { nickname: { $type: "string" }, deletedAt: null } })
+
+    // FE — statusCode + errorCode 동시 판정
+    export function isDuplicateNicknameError(error: unknown): boolean {
+      if (!NetworkError.isNetworkError(error)) return false;
+      if (error.metadata.statusCode !== 409) return false;
+      return error.metadata.response?.errorCode === "DUPLICATE_NICKNAME";
+    }
+schema_version: 1
