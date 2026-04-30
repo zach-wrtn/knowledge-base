@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["product", "status", "last_updated", "schema_version"],
   "properties": {
-    "product":        { "enum": ["ai-webtoon", "free-tab", "ugc-platform"] },
+    "product":        { "enum": ["ai-webtoon", "free-tab", "preview-feature", "ugc-platform"] },
     "status":         { "enum": ["draft", "active", "archived"] },
     "owner":          { "type": "string" },
     "last_updated":   { "type": "string", "format": "date" },
