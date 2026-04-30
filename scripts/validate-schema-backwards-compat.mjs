@@ -24,6 +24,7 @@ const targets = [
   { dir: join(ROOT, "learning/patterns"),     ext: ".yaml", validate: schema("pattern"),    loader: (f) => yaml.load(readFileSync(f, "utf8")) },
   { dir: join(ROOT, "learning/rubrics"),      ext: ".md",   validate: schema("rubric"),     loader: (f) => matter(readFileSync(f, "utf8")).data },
   { dir: join(ROOT, "learning/reflections"),  ext: ".md",   validate: schema("reflection"), loader: (f) => matter(readFileSync(f, "utf8")).data },
+  { dir: join(ROOT, "learning/qa"),           ext: ".md",   validate: schema("qa"),         loader: (f) => matter(readFileSync(f, "utf8")).data },
 ];
 
 let failed = 0;
