@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zach-wrtn.github.io/knowledge-base/schemas/learning/qa.schema.json",
+  "title": "Q&A (frontmatter only)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id", "question", "scope", "asker", "approver",
+    "approved_at", "last_verified_at", "status", "ai", "schema_version"
+  ],
+  "properties": {
+    "id":               { "type": "string", "pattern": "^qa-[0-9]{3,}$" },
+    "question":         { "type": "string", "minLength": 5, "maxLength": 200 },
+    "scope":            { "enum": ["global", "ai-webtoon", "free-tab", "ugc-platform"] },
+    "asker":            { "type": "string", "format": "email" },
+    "approver":         { "type": "string", "format": "email" },
+    "approved_at":      { "type": "string", "format": "date-time" },
+    "last_verified_at": { "type": "string", "format": "date-time" },
+    "status":           { "enum": ["active", "deprecated", "superseded"] },
+    "superseded_by":    { "type": "string", "pattern": "^qa-[0-9]{3,}$" },
+    "related": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "patterns":    { "type": "array", "items": { "type": "string", "pattern": "^(correctness|completeness|integration|edge_case|code_quality|design_proto|design_spec)-[0-9]{3}$" } },
+        "prds":        { "type": "array", "items": { "type": "string" } },
+        "events":      { "type": "array", "items": { "type": "string" } },
+        "qa":          { "type": "array", "items": { "type": "string", "pattern": "^qa-[0-9]{3,}$" } },
+        "reflections": { "type": "array", "items": { "type": "string" } },
+        "rubrics":     { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "ai": {
+      "type": "object",
+      "required": ["model", "sources_used"],
+      "additionalProperties": false,
+      "properties": {
+        "model": { "type": "string", "minLength": 1 },
+        "sources_used": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "id"],
+            "additionalProperties": false,
+            "properties": {
+              "type": { "enum": ["pattern", "prd", "event", "qa", "reflection", "rubric"] },
+              "id":   { "type": "string", "minLength": 1 },
+              "why":  { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "schema_version": { "const": 1 }
+  },
+  "allOf": [
+    {
+      "if":   { "properties": { "status": { "const": "superseded" } } },
+      "then": { "required": ["superseded_by"] }
+    }
+  ]
+}

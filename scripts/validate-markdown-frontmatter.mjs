@@ -23,6 +23,7 @@ function collectMd(dir) {
 const targets = [
   { dir: join(ROOT, "learning/rubrics"),      schema: loadSchema("rubric") },
   { dir: join(ROOT, "learning/reflections"),  schema: loadSchema("reflection") },
+  { dir: join(ROOT, "learning/qa"),           schema: loadSchema("qa") },
 ];
 
 let failed = 0;

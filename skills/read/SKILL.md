@@ -6,7 +6,7 @@ description: Query the KB by content type and filters. Returns file paths (calle
 # zzem-kb:read
 
 ## Inputs
-- `type` — one of `pattern`, `rubric`, `reflection`, `prd`, `events` (required).
+- `type` — one of `pattern`, `rubric`, `reflection`, `prd`, `events`, `qa` (required).
 - Filters (optional, AND semantics):
   - For `pattern`: `category` (enum), `severity` (enum), `min_frequency` (integer).
   - For `rubric`: `status` (default `active`).
@@ -14,6 +14,7 @@ description: Query the KB by content type and filters. Returns file paths (calle
   - For `prd`: `product` (enum: `ai-webtoon | free-tab | ugc-platform`).
   - For `events`: `product` (enum: `ai-webtoon | free-tab | ugc-platform`).
   - For `events`, optional `include` — one of `catalog` (default, returns only `catalog.yaml`) or `all` (returns `catalog.yaml` + every rationale `*.md` under `events/`).
+  - For `qa`: `scope` (enum: `global | ai-webtoon | free-tab | ugc-platform`), `status` (default `active`; `all` to include deprecated/superseded), `limit` (integer, default 20, most-recent first by `approved_at`).
 
 ## Preconditions
 - `zzem-kb:sync` was invoked in this sprint phase. If not, invoke it first.
@@ -27,6 +28,7 @@ description: Query the KB by content type and filters. Returns file paths (calle
    - `events` → resolve per product (see step 2 below). Preferred path is
      `$ZZEM_KB_PATH/products/{product}/events/catalog.yaml`; legacy fallback is
      `$ZZEM_KB_PATH/products/{product}/events.yaml`.
+   - `qa` → `$ZZEM_KB_PATH/learning/qa/*.md`
 
 2. **List candidates**
    - `pattern` / `rubric` / `reflection` / `prd`: glob as above.
@@ -45,6 +47,7 @@ description: Query the KB by content type and filters. Returns file paths (calle
    - `reflection`: keep if `domain` matches; sort by `completed_at` desc; slice `limit`.
    - `prd`: keep if `product` matches (or return all when no filter).
    - `events`: already filtered by `product` during path resolution (step 2). The catalog YAML itself has a `product` field — verify it matches the directory's product and warn on mismatch.
+   - `qa`: keep if `scope` matches (when set) and `status` matches (default keep only `active`); sort by `approved_at` desc; slice `limit`.
 
 4. **Return paths**
    Output a list of absolute file paths. The caller uses Read on each.
@@ -59,3 +62,4 @@ description: Query the KB by content type and filters. Returns file paths (calle
 - `type=prd, product=free-tab` → expect exactly 1 file (`products/free-tab/prd.md`)
 - `type=events, product=ai-webtoon` → expect exactly 1 file (`products/ai-webtoon/events/catalog.yaml`)
 - `type=events, product=free-tab, include=all` → expect `catalog.yaml` + `README.md` + rationale `*.md` files under `products/free-tab/events/`
+- `type=qa, scope=free-tab` → expect 0+ files (empty until Wiki app commits)
