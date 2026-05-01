@@ -1,6 +1,6 @@
 # Team Chat — Production Deploy Runbook
 
-**Repo:** `zzem-qa-wiki` (functionally a real-time team chat — repo name kept for stability)
+**Repo:** `zzem-wiki` (functionally a real-time team chat — repo name kept for stability)
 **Spec:** [`../superpowers/specs/2026-05-01-team-chat-design.md`](../superpowers/specs/2026-05-01-team-chat-design.md)
 **Region:** `asia-northeast3` (Seoul) for all Cloud Functions
 
@@ -101,7 +101,7 @@ To rotate later: `gcloud secrets versions add NAME --data-file=-` (Functions pic
 ## 3. Firestore rules + indexes
 
 ```bash
-cd ~/dev/work/zzem-qa-wiki
+cd ~/dev/work/zzem-wiki
 firebase deploy --only firestore:rules --project wrtn-team-chat
 firebase deploy --only firestore:indexes --project wrtn-team-chat
 ```
@@ -115,7 +115,7 @@ Verify in Firebase Console → Firestore → Indexes; all should report **Enable
 ## 4. Cloud Functions — deploy
 
 ```bash
-cd ~/dev/work/zzem-qa-wiki/functions
+cd ~/dev/work/zzem-wiki/functions
 npm ci && npm run build
 cd ..
 firebase deploy --only functions --project wrtn-team-chat
@@ -235,4 +235,4 @@ After §1–§5 are green:
 - Spec: [`../superpowers/specs/2026-05-01-team-chat-design.md`](../superpowers/specs/2026-05-01-team-chat-design.md)
 - Plans: `../superpowers/plans/2026-05-01-team-chat-{1..5}-*.md`
 - Firebase project: `wrtn-team-chat` (TBD if not yet created)
-- App repo: `wrtn-tech/zzem-qa-wiki`
+- App repo: `wrtn-tech/zzem-wiki`

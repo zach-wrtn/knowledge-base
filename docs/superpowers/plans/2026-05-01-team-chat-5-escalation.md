@@ -42,7 +42,7 @@
 - [ ] **Step 1: Branch off**
 
 ```bash
-cd ~/dev/work/zzem-qa-wiki
+cd ~/dev/work/zzem-wiki
 git checkout main && git pull
 git checkout -b plan/team-chat-5-escalation
 ```
@@ -264,7 +264,7 @@ export const escalateToHuman = onCall(
       fromEmail,
       toEmail: data.toEmail,
       conversationTitle: conv.title as string,
-      appBaseUrl: process.env.APP_BASE_URL ?? "https://zzem-qa-wiki.web.app",
+      appBaseUrl: process.env.APP_BASE_URL ?? "https://zzem-wiki.web.app",
     });
 
     const batch = db.batch();

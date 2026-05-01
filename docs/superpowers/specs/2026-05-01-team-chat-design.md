@@ -1,4 +1,4 @@
-# Team Chat (Real-Time Q&A) Design
+# Team Chat Design
 
 - **Date**: 2026-05-01
 - **Status**: Draft — supersedes `docs/superpowers/specs/2026-04-30-team-qa-wiki-design.md`
@@ -417,9 +417,9 @@ Five PRs from the prior direction:
 | #14 — KB qa schema, qa-owners | knowledge-base (merged) | **Revert** — `learning/qa/`, `learning/qa-owners.yaml`, `schemas/learning/qa.schema.json`, `schemas/learning/qa-owners.schema.json`, `scripts/validate-qa-owners.mjs`, README/skill changes. New design doesn't use any of these. |
 | #15 — deploy runbook | knowledge-base | **Close** — superseded by a new runbook for the chat redesign. |
 | #16 — Phase 2A embeddings | knowledge-base | **Close** — was scoped to `qa-records` which doesn't exist anymore. New embedding plan targets `shared-conversations` (same Vertex AI infra; different data model). |
-| zzem-qa-wiki #1 — foundation | zzem-qa-wiki | **Merge** — reusable scaffold (Next.js, auth, shadcn, Firebase glue). Data model in `src/types/qa.ts` will be replaced post-merge. |
-| zzem-qa-wiki #2 — AI integration | zzem-qa-wiki | **Partial merge** — keep KB tools, Anthropic SDK integration, secrets infra. `generateDraft` Cloud Function will be replaced by `streamMessage`. |
-| zzem-qa-wiki #3 — approval pipeline | zzem-qa-wiki | **Close** — entirely scrapped. requestReview / approveAndCommit / rejectDraft / qa-owners.yaml routing / qa-validate / qa-commit / search-tokens / Slack approval helpers all gone. |
+| zzem-wiki #1 — foundation | zzem-wiki | **Merge** — reusable scaffold (Next.js, auth, shadcn, Firebase glue). Data model in `src/types/qa.ts` will be replaced post-merge. |
+| zzem-wiki #2 — AI integration | zzem-wiki | **Partial merge** — keep KB tools, Anthropic SDK integration, secrets infra. `generateDraft` Cloud Function will be replaced by `streamMessage`. |
+| zzem-wiki #3 — approval pipeline | zzem-wiki | **Close** — entirely scrapped. requestReview / approveAndCommit / rejectDraft / qa-owners.yaml routing / qa-validate / qa-commit / search-tokens / Slack approval helpers all gone. |
 
 **Salvageable code (~40%):**
 
