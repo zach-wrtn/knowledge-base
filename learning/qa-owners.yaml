@@ -1,7 +1,0 @@
-schema_version: 1
-scopes:
-  global:       [zach@wrtn.io]
-  ai-webtoon:   [zach@wrtn.io]
-  free-tab:     [zach@wrtn.io]
-  ugc-platform: [zach@wrtn.io]
-admins:         [zach@wrtn.io]

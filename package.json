@@ -6,7 +6,7 @@
   "description": "Machine-readable team knowledge base.",
   "scripts": {
     "validate:schemas": "node scripts/validate-fixtures.mjs",
-    "validate:learning": "node scripts/validate-filename-id-match.mjs && node scripts/validate-unique-ids.mjs && node scripts/validate-pattern-schemas.mjs && node scripts/validate-markdown-frontmatter.mjs && node scripts/validate-qa-owners.mjs",
+    "validate:learning": "node scripts/validate-filename-id-match.mjs && node scripts/validate-unique-ids.mjs && node scripts/validate-pattern-schemas.mjs && node scripts/validate-markdown-frontmatter.mjs",
     "validate:products": "node scripts/validate-product-schemas.mjs && node scripts/validate-product-dir-enum.mjs",
     "validate:skills": "node scripts/validate-skill-frontmatter.mjs",
     "validate:backcompat": "node scripts/validate-schema-backwards-compat.mjs",

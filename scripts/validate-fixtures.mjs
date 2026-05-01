@@ -7,7 +7,7 @@ import matter from "gray-matter";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const SCHEMA_DIRS = {
-  pattern: "learning", reflection: "learning", rubric: "learning", qa: "learning",
+  pattern: "learning", reflection: "learning", rubric: "learning",
   prd: "products",    events: "products",    "notion-prds": "products",
   "active-prd": "products",
 };
@@ -43,10 +43,6 @@ const cases = [
   { schema: "rubric",      fixture: "valid-rubric.md",                        expect: "valid", loader: loadFrontmatter },
   { schema: "rubric",      fixture: "invalid-rubric-missing-frontmatter.md",  expect: "invalid", loader: loadFrontmatter },
   { schema: "reflection",  fixture: "valid-reflection.md",                    expect: "valid", loader: loadFrontmatter },
-  { schema: "qa",          fixture: "valid-qa.md",                            expect: "valid",   loader: loadFrontmatter },
-  { schema: "qa",          fixture: "invalid-qa-missing-scope.md",            expect: "invalid", loader: loadFrontmatter },
-  { schema: "qa",          fixture: "invalid-qa-bad-scope-enum.md",           expect: "invalid", loader: loadFrontmatter },
-  { schema: "qa",          fixture: "invalid-qa-superseded-no-target.md",     expect: "invalid", loader: loadFrontmatter },
   { schema: "prd",         fixture: "valid-prd.md",                           expect: "valid",   loader: loadFrontmatter },
   { schema: "prd",         fixture: "invalid-prd-bad-product.md",             expect: "invalid", loader: loadFrontmatter },
   { schema: "prd",         fixture: "invalid-prd-missing-status.md",          expect: "invalid", loader: loadFrontmatter },
