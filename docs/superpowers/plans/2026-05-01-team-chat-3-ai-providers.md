@@ -39,7 +39,7 @@
 - [ ] **Step 1: Branch off + ensure Anthropic SDK is installed**
 
 ```bash
-cd ~/dev/work/zzem-qa-wiki
+cd ~/dev/work/zzem-wiki
 git checkout main && git pull
 git checkout -b plan/team-chat-3-ai-providers
 cd functions

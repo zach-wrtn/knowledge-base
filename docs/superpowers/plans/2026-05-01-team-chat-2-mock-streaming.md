@@ -48,7 +48,7 @@
 - [ ] **Step 1: Branch off post-Plan-1 main**
 
 ```bash
-cd ~/dev/work/zzem-qa-wiki
+cd ~/dev/work/zzem-wiki
 git checkout main && git pull
 git checkout -b plan/team-chat-2-mock-streaming
 mkdir -p functions/src/lib/ai
@@ -1202,7 +1202,7 @@ Should show `"functions": { "port": 5001 }`. If not, add to the `emulators:` blo
 In `package.json`:
 
 ```json
-"emulator": "firebase emulators:start --only auth,firestore,functions --project demo-zzem-qa-wiki",
+"emulator": "firebase emulators:start --only auth,firestore,functions --project demo-zzem-wiki",
 ```
 
 - [ ] **Step 3: Set NEXT_PUBLIC_STREAM_MESSAGE_URL for local dev**
@@ -1210,7 +1210,7 @@ In `package.json`:
 In `.env.local` (not `.env.local.example`):
 
 ```
-NEXT_PUBLIC_STREAM_MESSAGE_URL=http://localhost:5001/demo-zzem-qa-wiki/asia-northeast3/streamMessage
+NEXT_PUBLIC_STREAM_MESSAGE_URL=http://localhost:5001/demo-zzem-wiki/asia-northeast3/streamMessage
 ```
 
 (For dev only. Production uses the deployed URL — Cloud Functions URL pattern is `https://<region>-<project-id>.cloudfunctions.net/<function-name>`.)
@@ -1248,7 +1248,7 @@ After this task, the user can run the app locally end-to-end with mock AI.
 
 ```bash
 # Terminal 1
-cd ~/dev/work/zzem-qa-wiki/functions && npm run build && cd ..
+cd ~/dev/work/zzem-wiki/functions && npm run build && cd ..
 npm run emulator
 
 # Terminal 2 (after emulator UI shows ready)

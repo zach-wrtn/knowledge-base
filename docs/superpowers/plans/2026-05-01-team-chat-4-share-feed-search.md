@@ -52,7 +52,7 @@
 - [ ] **Step 1: Branch + install dep**
 
 ```bash
-cd ~/dev/work/zzem-qa-wiki
+cd ~/dev/work/zzem-wiki
 git checkout main && git pull
 git checkout -b plan/team-chat-4-share-feed-search
 cd functions

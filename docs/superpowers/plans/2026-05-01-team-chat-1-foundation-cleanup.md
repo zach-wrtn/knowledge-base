@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Clean the `zzem-qa-wiki` repo of all approval-pipeline / qa-records / question-and-draft scaffolding. Establish the new conversation/message data model. End in a state where `npm run dev` boots cleanly and the user is dropped onto a "no conversations yet" empty state. No AI integration here.
+**Goal:** Clean the `zzem-wiki` repo of all approval-pipeline / qa-records / question-and-draft scaffolding. Establish the new conversation/message data model. End in a state where `npm run dev` boots cleanly and the user is dropped onto a "no conversations yet" empty state. No AI integration here.
 
 **Architecture:** Salvage Plan 2's foundation (Next.js + Firebase + auth + shadcn). Replace `src/types/qa.ts` with `src/types/conversation.ts`. Remove all `/queue`, `/q/[qid]`, `/ask`, `/my` (in current shape), `/search` (current shape) routes. Add stub routes `/c/[cid]`, `/me`, `/feed`, `/search` (empty placeholders for later plans). Replace Firestore rules + indexes for new data model. Remove all approval-pipeline Cloud Functions; keep `mirrorUserProfile` and the lib infra.
 
@@ -12,10 +12,10 @@
 
 **Prerequisites:**
 - spec PR #17 merged (or this work happens on a branch that doesn't conflict)
-- zzem-qa-wiki PR #1 (foundation) merged to `main` of zzem-qa-wiki — this gives us the scaffold to clean up
+- zzem-wiki PR #1 (foundation) merged to `main` of zzem-wiki — this gives us the scaffold to clean up
 - knowledge-base PR #18 merged (qa schema removed) — not strictly required for app code but keeps KB clean
 
-**Repo context:** All paths relative to `zzem-qa-wiki/` unless prefixed `zzem-knowledge-base/`.
+**Repo context:** All paths relative to `zzem-wiki/` unless prefixed `zzem-knowledge-base/`.
 
 ---
 
@@ -71,10 +71,10 @@
 **Files:**
 - Delete: `src/types/qa.ts`, `src/lib/firebase/db.ts`, `src/lib/firebase/owners.ts`, `src/lib/firebase/callables.ts`, `src/components/qa/`, `src/app/{ask,q,queue,my,search}/`, `tests/e2e/ask.spec.ts`
 
-- [ ] **Step 1: Create branch from current zzem-qa-wiki main**
+- [ ] **Step 1: Create branch from current zzem-wiki main**
 
 ```bash
-cd ~/dev/work/zzem-qa-wiki
+cd ~/dev/work/zzem-wiki
 git checkout main && git pull
 git checkout -b plan/team-chat-1-foundation-cleanup
 ```
@@ -120,7 +120,7 @@ This commit is intentionally broken-build to keep the diff narrow. Subsequent ta
 - [ ] **Step 1: Delete function files**
 
 ```bash
-cd ~/dev/work/zzem-qa-wiki/functions
+cd ~/dev/work/zzem-wiki/functions
 rm -rf src/draft src/review src/schemas
 rm src/lib/{qa-validate,qa-commit,slack,search-tokens,draft-output,owners}.ts
 rm src/lib/__tests__/{qa-validate,qa-commit,owners,search-tokens,draft-output}.test.ts
@@ -186,7 +186,7 @@ export { mirrorUserProfile } from "./auth/mirrorUserProfile";
 - [ ] **Step 5: Build + test**
 
 ```bash
-cd ~/dev/work/zzem-qa-wiki/functions
+cd ~/dev/work/zzem-wiki/functions
 rm -rf lib/  # clean stale build output
 npm run build
 npm test
@@ -318,7 +318,7 @@ export const SCOPES: Scope[] = ["global", "ai-webtoon", "free-tab", "ugc-platfor
 - [ ] **Step 2: Build to confirm types compile**
 
 ```bash
-cd ~/dev/work/zzem-qa-wiki
+cd ~/dev/work/zzem-wiki
 # Build will still fail because pages reference deleted modules; just check types module compiles.
 npx tsc --noEmit src/types/conversation.ts 2>&1 | tail -5
 ```
@@ -623,7 +623,7 @@ export default function SearchPage() {
 - [ ] **Step 5: Build + commit**
 
 ```bash
-cd ~/dev/work/zzem-qa-wiki
+cd ~/dev/work/zzem-wiki
 npm run build
 ```
 
@@ -760,7 +760,7 @@ git commit -m "rules+indexes: rewrite for conversation/message/shared model"
  */
 import admin from "firebase-admin";
 
-const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "demo-zzem-qa-wiki";
+const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "demo-zzem-wiki";
 
 process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || "localhost:8181";
 process.env.FIREBASE_AUTH_EMULATOR_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST || "localhost:9099";
@@ -854,7 +854,7 @@ git commit -m "seed: rewrite for conversation model (users only, chats deferred 
 Replace the top-of-README description with:
 
 ```markdown
-# zzem-qa-wiki
+# zzem-wiki
 
 (Repo name kept for stability; functionally this is now a real-time team chat.)
 
@@ -925,7 +925,7 @@ After this task the user can run the app locally end-to-end.
 - [ ] **Step 1: Build everything**
 
 ```bash
-cd ~/dev/work/zzem-qa-wiki
+cd ~/dev/work/zzem-wiki
 npm run build
 cd functions && npm run build && cd ..
 ```
