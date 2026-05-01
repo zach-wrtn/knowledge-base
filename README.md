@@ -43,7 +43,6 @@ Two axes: `learning/` (self-improving meta-knowledge) and `products/` (per-produ
 | pattern | `learning/patterns/` | `schemas/learning/pattern.schema.json` | `{category}-{NNN}.yaml` |
 | rubric | `learning/rubrics/` | `schemas/learning/rubric.schema.json` | `v{N}.md` |
 | reflection | `learning/reflections/` | `schemas/learning/reflection.schema.json` | `{sprint-id}.md` |
-| qa | `learning/qa/` | `schemas/learning/qa.schema.json` | `qa-{NNN}.md` |
 
 ### Axis 2 — `products/`
 
@@ -67,11 +66,6 @@ the validator with a deprecation warning; scheduled for removal in KB Phase 3.
 `products/{product}/{slug}/prd.md` files are full `상태 = 진행 중` PRD bodies
 mirrored from Notion (SSOT; sourced via `zzem-kb:sync-active-prds` — do NOT
 hand-edit, overwrite-on-sync policy).
-
-Approved Q&A is committed by the `zzem-qa-wiki` app (separate repo). See
-`learning/qa/README.md` for the hand-edit policy. Owner routing for the
-wiki's approval workflow lives in `learning/qa-owners.yaml`, validated by
-`scripts/validate-qa-owners.mjs` as part of `npm run validate:learning`.
 
 ## Contributing
 
