@@ -1,4 +1,4 @@
-# zzem-knowledge-base
+# zzem-knowledge-base (deprecated)
 
 Machine-readable team knowledge base consumed by orchestrator agents.
 
